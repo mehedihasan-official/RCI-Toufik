@@ -3,7 +3,17 @@
 import { AuthContext } from "@/providers/AuthProvider";
 import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
-import { FaBars, FaCalendar, FaInfoCircle, FaPhone, FaSignOutAlt, FaUser } from "react-icons/fa";
+import { MdDashboard } from "react-icons/md";
+import {
+  FaBars,
+  FaCalendar,
+  FaHeart,
+  FaInfoCircle,
+  FaPhone,
+  FaShieldAlt as FaShield,
+  FaSignOutAlt,
+  FaUser,
+} from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 
 import { IoSearchSharp, IoSettings } from "react-icons/io5";

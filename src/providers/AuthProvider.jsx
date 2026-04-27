@@ -26,20 +26,82 @@ export default function AuthProvider({ children }) {
   const [allUsersData, setAllUsersData] = useState([]);
   const [paymentInfoData, setPaymentInfoData] = useState(null);
 
+  const getFallbackNameFromEmail = (email = "") => {
+    const [localPart = "User"] = email.split("@");
+    return localPart;
+  };
+
+  const upsertAndGetMongoUser = async (
+    firebaseUser,
+    membership = "Bronze",
+    preferredName,
+  ) => {
+    const email = firebaseUser?.email;
+    if (!email) {
+      throw new Error("Authenticated user does not have an email address.");
+    }
+
+    const checkResponse = await fetch(`/api/users?email=${email}`);
+
+    if (checkResponse.ok) {
+      return await checkResponse.json();
+    }
+
+    if (checkResponse.status === 404) {
+      const createResponse = await fetch("/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name:
+            preferredName ||
+            firebaseUser.displayName ||
+            firebaseUser.name ||
+            getFallbackNameFromEmail(email),
+          email,
+          photoURL: firebaseUser.photoURL || null,
+          membership,
+        }),
+      });
+
+      if (!createResponse.ok) {
+        const errorBody = await createResponse.text();
+        throw new Error(
+          `Failed to save user to MongoDB (${createResponse.status}): ${errorBody}`,
+        );
+      }
+
+      return await createResponse.json();
+    }
+
+    const errorBody = await checkResponse.text();
+    throw new Error(
+      `Failed to fetch user from MongoDB (${checkResponse.status}): ${errorBody}`,
+    );
+  };
+
+  const syncAuthenticatedUser = async (
+    firebaseUser,
+    membership = "Bronze",
+    preferredName,
+  ) => {
+    const mongoUser = await upsertAndGetMongoUser(
+      firebaseUser,
+      membership,
+      preferredName,
+    );
+    setUser(mongoUser);
+    setRole(mongoUser.isAdmin ? "admin" : "user");
+    await fetchBookingsData(mongoUser.email);
+    return mongoUser;
+  };
+
   // Auth Methods
   const login = async (email, password) => {
     setLoading(true);
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = result.user;
-
-      const response = await fetch(`/api/users?email=${email}`);
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        setRole(userData.isAdmin ? "admin" : "user");
-        await fetchBookingsData(email);
-      }
+      await syncAuthenticatedUser(firebaseUser);
       return firebaseUser;
     } catch (error) {
       console.error("Login error:", error);
@@ -67,22 +129,7 @@ export default function AuthProvider({ children }) {
       const firebaseUser = result.user;
 
       // Create user in MongoDB
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          email,
-          photoURL: firebaseUser.photoURL,
-          membership,
-        }),
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        setRole("user");
-      }
+      await syncAuthenticatedUser(firebaseUser, membership, name);
       return firebaseUser;
     } catch (error) {
       console.error("Create user error:", error);
@@ -98,37 +145,7 @@ export default function AuthProvider({ children }) {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       const firebaseUser = result.user;
-      const { email, displayName, photoURL } = firebaseUser;
-
-      // Check if user exists
-      const checkResponse = await fetch(`/api/users?email=${email}`);
-
-      if (checkResponse.status === 404) {
-        // User doesn't exist, create new user
-        const response = await fetch("/api/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: displayName,
-            email,
-            photoURL,
-            membership: "Bronze",
-          }),
-        });
-
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          setRole("user");
-        }
-      } else if (checkResponse.ok) {
-        // User exists
-        const userData = await checkResponse.json();
-        setUser(userData);
-        setRole(userData.isAdmin ? "admin" : "user");
-        await fetchBookingsData(email);
-      }
-
+      await syncAuthenticatedUser(firebaseUser, "Bronze");
       return firebaseUser;
     } catch (error) {
       console.error("Google login error:", error);
@@ -290,17 +307,13 @@ export default function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          const response = await fetch(
-            `/api/users?email=${firebaseUser.email}`,
-          );
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-            setRole(userData.isAdmin ? "admin" : "user");
-            await fetchBookingsData(firebaseUser.email);
-          }
+          await syncAuthenticatedUser(firebaseUser, "Bronze");
         } catch (error) {
           console.error("Auth state change error:", error);
+          setUser(null);
+          setRole("user");
+          setBookingsData([]);
+          setPaymentInfoData(null);
         }
       } else {
         setUser(null);
@@ -312,6 +325,8 @@ export default function AuthProvider({ children }) {
     });
 
     return () => unsubscribe();
+    // This provider intentionally bootstraps once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const authInfo = {
