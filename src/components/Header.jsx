@@ -5,8 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useContext, useState } from "react";
 import { FaBell, FaUserCircle } from "react-icons/fa";
+import logo from "../../public/Rci-vertical.png";
 import MobileDropdown from "./MobileDropdown";
-import logo from "../../public/Rci-vertical.png"
+import SearchBarMobile from "./SearchBarMobile";
 
 export default function Header() {
   const { user, role, signOut } = useContext(AuthContext);
@@ -60,11 +61,11 @@ export default function Header() {
       </div>
 
       {/* Main Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white shadow-sm">
+      <header className="sticky top-0 z-40 border-b border-[#035c73] bg-[#037092] text-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-[#037092]">
-              <img src={logo.src} alt="RCI" className="h-10 w-10" />
+          <Link href="/" className="text-2xl font-bold text-white">
+            <img src={logo.src} alt="RCI" className="h-10 w-10" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -75,8 +76,8 @@ export default function Header() {
                 href={link.href}
                 className={`relative text-sm font-semibold transition ${
                   isActive(link.href)
-                    ? "text-[#037092]"
-                    : "text-gray-700 hover:text-[#037092]"
+                    ? "text-white"
+                    : "text-white/80 hover:text-white"
                 }`}
               >
                 {link.label}
@@ -155,13 +156,13 @@ export default function Header() {
               <>
                 <Link
                   href="/login"
-                  className="text-sm font-semibold text-[#037092] hover:underline"
+                  className="text-sm font-semibold text-white hover:underline"
                 >
                   Log In
                 </Link>
                 <Link
                   href="/registration"
-                  className="rounded-lg bg-[#037092] px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                  className="rounded-lg bg-white px-6 py-2 text-sm font-semibold text-[#037092] hover:bg-slate-100"
                 >
                   Join Now
                 </Link>
@@ -173,6 +174,9 @@ export default function Header() {
           <div className="md:hidden">
             <MobileDropdown />
           </div>
+        </div>
+        <div className="mx-auto max-w-7xl px-6 pb-4 md:hidden">
+          <SearchBarMobile />
         </div>
       </header>
     </>
