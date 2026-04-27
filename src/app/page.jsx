@@ -3,12 +3,24 @@
 import Link from "next/link";
 import { FaArrowRight } from "react-icons/fa";
 import { IoCalendar, IoCard, IoGlobe, IoStar } from "react-icons/io5";
+import hero_section_image from "../assets/images/hero-section-image.jpg";
 
 export default function Home() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-700 px-6 py-20">
+     <section
+        className="relative min-h-screen overflow-hidden px-6 py-20"
+        style={{
+          backgroundImage: `url(${hero_section_image.src})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed',
+        }}
+      >
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/70 via-blue-800/70 to-cyan-700/70" />
+
         {/* Animated Background Circles */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-cyan-500 opacity-10 blur-3xl animation-pulse" />
