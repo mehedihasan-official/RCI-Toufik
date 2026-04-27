@@ -33,7 +33,7 @@ export default function TopAmenities() {
       {amenities.map((item) => (
         <div
           key={item.label}
-          className="carousel-item relative min-w-[170px] rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
+          className="carousel-item relative min-w-42.5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
         >
           <div className="flex items-center gap-3">
             <img

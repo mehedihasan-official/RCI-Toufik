@@ -42,7 +42,7 @@ export default function Header() {
   return (
     <>
       {/* Top Bar - Desktop Only */}
-      <div className="hidden bg-gradient-to-r from-blue-900 to-blue-800 px-6 py-2 text-xs text-white md:block">
+      <div className="hidden bg-linear-to-r from-blue-900 to-blue-800 px-6 py-2 text-xs text-white md:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex gap-6">
             <span>Global | EN</span>
@@ -93,7 +93,7 @@ export default function Header() {
             {user ? (
               <>
                 {/* Notification Bell */}
-                <button className="relative text-gray-700 hover:text-[#037092]">
+                <button className="relative text-white hover:text-slate-100">
                   <FaBell size={20} />
                   <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
                     1
@@ -104,20 +104,18 @@ export default function Header() {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 rounded-full border border-slate-300 px-4 py-2 transition hover:bg-slate-50"
-                  >
-                    {user.photoURL ? (
-                      <img
-                        src={user.photoURL}
-                        alt={user.name}
-                        className="h-8 w-8 rounded-full"
-                      />
-                    ) : (
-                      <FaUserCircle size={24} className="text-[#037092]" />
-                    )}
-                    <span className="text-sm font-semibold text-gray-700">
-                      {user.name?.split(" ")[0]}
-                    </span>
+                  className="flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 transition hover:bg-white/10"
+                >
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.name}
+                      className="h-8 w-8 rounded-full"
+                    />
+                  ) : (
+                    <FaUserCircle size={24} className="text-white" />
+                  )}
+                  <span className="text-sm font-semibold text-white"/>
                   </button>
 
                   {showUserMenu && (

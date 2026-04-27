@@ -136,7 +136,7 @@ export default function SingleResortPage() {
 
       <div className="mx-auto max-w-6xl px-6 py-10 sm:px-10">
         <div className="space-y-8">
-          <div className="relative h-64 overflow-hidden rounded-3xl bg-slate-200 sm:h-80 md:h-96 lg:h-[500px]">
+          <div className="relative h-64 overflow-hidden rounded-3xl bg-slate-200 sm:h-80 md:h-96 lg:h-125">
             {additional_images.map((image, index) => {
               const offset = index - currentIndex;
               const positionClass =
