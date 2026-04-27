@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useContext, useState } from "react";
 import { FaBell, FaUserCircle } from "react-icons/fa";
 import MobileDropdown from "./MobileDropdown";
+import logo from "../../public/Rci-vertical.png"
 
 export default function Header() {
   const { user, role, signOut } = useContext(AuthContext);
@@ -63,7 +64,7 @@ export default function Header() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           {/* Logo */}
           <Link href="/" className="text-2xl font-bold text-[#037092]">
-            RCI
+              <img src={logo.src} alt="RCI" className="h-10 w-10" />
           </Link>
 
           {/* Desktop Navigation */}
@@ -131,7 +132,7 @@ export default function Header() {
                       <nav className="flex flex-col">
                         {userMenuLinks.map((link) => (
                           <Link
-                            key={link.href}
+                            key={`${link.href}-${link.label}`}
                             href={link.href}
                             className="px-4 py-2 text-sm text-gray-700 hover:bg-slate-50"
                             onClick={() => setShowUserMenu(false)}

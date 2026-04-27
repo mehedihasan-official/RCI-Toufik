@@ -299,10 +299,12 @@ export default function AuthProvider({ children }) {
 
   // Setup Auth Listener
   useEffect(() => {
-    fetchResortData(1, 15);
-    fetchAllResorts();
-    fetchAllBookingsData();
-    fetchAllUsersData();
+    queueMicrotask(() => {
+      fetchResortData(1, 15);
+      fetchAllResorts();
+      fetchAllBookingsData();
+      fetchAllUsersData();
+    });
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {

@@ -1,7 +1,6 @@
 "use client";
 
 import { AuthContext } from "@/providers/AuthProvider";
-import Link from "next/link";
 import { useContext, useEffect, useState } from "react";
 import { MdDashboard } from "react-icons/md";
 import {
@@ -17,6 +16,7 @@ import {
 import { FaXmark } from "react-icons/fa6";
 
 import { IoSearchSharp, IoSettings } from "react-icons/io5";
+import Link from "next/link";
 
 export default function MobileDropdown() {
   const { user, role, signOut } = useContext(AuthContext);
@@ -164,7 +164,7 @@ export default function MobileDropdown() {
                   const Icon = item.icon;
                   return (
                     <Link
-                      key={item.href}
+                      key={`${item.href}-${item.label}`}
                       href={item.href}
                       onClick={handleClose}
                       className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-700 hover:bg-slate-100"
