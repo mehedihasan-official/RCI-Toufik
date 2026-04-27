@@ -1,11 +1,11 @@
 "use client";
 
-import { Suspense, useContext, useEffect, useState } from "react";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import Loading from "@/components/Loading";
 import ResortCard from "@/components/ResortCard";
 import { AuthContext } from "@/providers/AuthProvider";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useContext, useEffect, useState } from "react";
 
 export default function SearchPage() {
   const { allResortData = [] } = useContext(AuthContext);
@@ -35,7 +35,9 @@ export default function SearchPage() {
   }, [searchTerm, allResortData]);
 
   const performSearch = (query, data) => {
-    const normalized = String(query || "").trim().toLowerCase();
+    const normalized = String(query || "")
+      .trim()
+      .toLowerCase();
     if (!normalized) return [];
 
     const queryWords = normalized.split(/\s+/).filter(Boolean);
@@ -46,7 +48,9 @@ export default function SearchPage() {
       const matchedWords = [];
       const placeName = String(resort.place_name || "").toLowerCase();
       const location = String(resort.location || "").toLowerCase();
-      const resortId = String(resort.resort_ID || resort._id || "").toLowerCase();
+      const resortId = String(
+        resort.resort_ID || resort._id || "",
+      ).toLowerCase();
 
       queryWords.forEach((word) => {
         if (placeName.includes(word)) {
@@ -74,8 +78,12 @@ export default function SearchPage() {
         if (b.matchedWords.length !== a.matchedWords.length) {
           return b.matchedWords.length - a.matchedWords.length;
         }
-        const aPlaceMatch = queryWords.some((word) => a.resort.place_name?.toLowerCase().includes(word));
-        const bPlaceMatch = queryWords.some((word) => b.resort.place_name?.toLowerCase().includes(word));
+        const aPlaceMatch = queryWords.some((word) =>
+          a.resort.place_name?.toLowerCase().includes(word),
+        );
+        const bPlaceMatch = queryWords.some((word) =>
+          b.resort.place_name?.toLowerCase().includes(word),
+        );
         return Number(bPlaceMatch) - Number(aPlaceMatch);
       })
       .map((item) => item.resort);
@@ -95,7 +103,8 @@ export default function SearchPage() {
       <section className="px-6 py-10">
         <div className="mx-auto max-w-6xl">
           <h1 className="text-3xl font-bold text-slate-900">
-            Search Results Found: <span className="font-semibold">{searchTerm || ""}</span>
+            Search Results Found:{" "}
+            <span className="font-semibold">{searchTerm || ""}</span>
           </h1>
           {searchTerm && (
             <p className="mt-3 text-sm text-slate-600">
@@ -111,10 +120,17 @@ export default function SearchPage() {
             <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {searchData.map((resort) => {
                 const modifiedResort = modifyResortData(resort);
-                const destination = modifiedResort.available === false ? "#" : `/singleResortPage/${resort._id}`;
+                const destination =
+                  modifiedResort.available === false
+                    ? "#"
+                    : `/singleResortPage/${resort._id}`;
                 return (
                   <Link key={resort._id || resort.id} href={destination}>
-                    <ResortCard resort={modifiedResort} showPoints={true} weekendPointPremium={500} />
+                    <ResortCard
+                      resort={modifiedResort}
+                      showPoints={true}
+                      weekendPointPremium={500}
+                    />
                   </Link>
                 );
               })}
@@ -128,7 +144,8 @@ export default function SearchPage() {
           ) : (
             <div className="mt-10 rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
               <p className="text-lg text-slate-600">
-                Start a search from the header to find resorts by name, location, or ID.
+                Start a search from the header to find resorts by name,
+                location, or ID.
               </p>
             </div>
           )}

@@ -175,7 +175,7 @@ export default function Header() {
             <MobileDropdown />
           </div>
         </div>
-        <div className="mx-auto max-w-7xl px-6 pb-4 md:hidden">
+        <div className="mx-auto max-w-7xl px-6 pb-4">
           <SearchBarMobile />
         </div>
       </header>
