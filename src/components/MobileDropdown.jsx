@@ -1,285 +1,447 @@
-"use client";
+﻿"use client";
 
 import { AuthContext } from "@/providers/AuthProvider";
 import Link from "next/link";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import {
   FaBars,
-  FaCalendar,
-  FaHeart,
+  FaBell,
+  FaCalendarAlt,
+  FaCrown,
+  FaEnvelope,
+  FaGlobeAmericas,
   FaInfoCircle,
-  FaPhone,
-  FaShieldAlt as FaShield,
+  FaQuestionCircle,
+  FaRegHeart,
+  FaSearch,
+  FaShieldAlt,
   FaSignOutAlt,
-  FaUser,
+  FaStar,
+  FaTimes,
+  FaUserCircle,
+  FaWallet,
 } from "react-icons/fa";
-import { FaXmark } from "react-icons/fa6";
-import { IoSearchSharp, IoSettings } from "react-icons/io5";
-import { MdDashboard } from "react-icons/md";
+import { GiWorld } from "react-icons/gi";
+import { MdDashboard, MdLocalOffer } from "react-icons/md";
 
 export default function MobileDropdown() {
   const { user, role, signOut } = useContext(AuthContext);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  const toggleMenu = () => {
+    setIsMenuOpen((prev) => !prev);
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
 
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "unset";
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        closeMenu();
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.body.style.overflow = "hidden";
+    }
 
     return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
       document.body.style.overflow = "unset";
     };
-  }, [isOpen]);
-
-  const handleClose = () => setIsOpen(false);
+  }, [isMenuOpen]);
 
   const handleSignOut = async () => {
     await signOut();
-    handleClose();
+    closeMenu();
   };
 
-  const menuItems = user
-    ? role === "admin"
+  const mainMenuItems = [
+    {
+      icon: <FaSearch className="text-xl" />,
+      label: "Search Vacations",
+      path: "/search",
+      color: "text-blue-500",
+      bgColor: "bg-blue-50",
+    },
+    {
+      icon: <FaCalendarAlt className="text-xl" />,
+      label: "Book Vacation",
+      path: "/lastCallVacation",
+      color: "text-emerald-500",
+      bgColor: "bg-emerald-50",
+    },
+    {
+      icon: <FaGlobeAmericas className="text-xl" />,
+      label: "Destinations",
+      path: "/search",
+      color: "text-purple-500",
+      bgColor: "bg-purple-50",
+    },
+    {
+      icon: <MdLocalOffer className="text-xl" />,
+      label: "Special Offers",
+      path: "/",
+      color: "text-amber-500",
+      bgColor: "bg-amber-50",
+    },
+    {
+      icon: <FaInfoCircle className="text-xl" />,
+      label: "How It Works",
+      path: "/",
+      color: "text-cyan-500",
+      bgColor: "bg-cyan-50",
+    },
+  ];
+
+  const userMenuItems =
+    role === "admin"
       ? [
           {
+            icon: <FaCrown className="text-xl" />,
             label: "Admin Panel",
-            href: "/admin-panel/admin-overview",
-            icon: FaShield,
+            path: "/admin-panel/admin-overview",
+            color: "text-red-500",
           },
-          { label: "Profile", href: "/profile", icon: FaUser },
-          { label: "Security", href: "/profile", icon: IoSettings },
+          {
+            icon: <FaUserCircle className="text-xl" />,
+            label: "Profile",
+            path: "/profile",
+            color: "text-blue-500",
+          },
+          {
+            icon: <FaShieldAlt className="text-xl" />,
+            label: "Security",
+            path: "/profile",
+            color: "text-green-500",
+          },
         ]
       : [
           {
+            icon: <MdDashboard className="text-xl" />,
             label: "Dashboard",
-            href: "/dashboard/overview",
-            icon: MdDashboard,
+            path: "/dashboard/overview",
+            color: "text-indigo-500",
           },
           {
-            label: "My Bookings",
-            href: "/dashboard/overview",
-            icon: FaCalendar,
+            icon: <FaUserCircle className="text-xl" />,
+            label: "My Profile",
+            path: "/profile",
+            color: "text-blue-500",
           },
-          { label: "My Favorites", href: "/profile", icon: FaHeart },
-        ]
-    : [];
+          {
+            icon: <FaWallet className="text-xl" />,
+            label: "My Account",
+            path: "/myAccount",
+            color: "text-emerald-500",
+          },
+          {
+            icon: <FaBell className="text-xl" />,
+            label: "Notifications",
+            path: "/notifications",
+            color: "text-amber-500",
+          },
+          {
+            icon: <FaRegHeart className="text-xl" />,
+            label: "My Favorites",
+            path: "/myFavorites",
+            color: "text-pink-500",
+          },
+          {
+            icon: <FaStar className="text-xl" />,
+            label: "Points Balance",
+            path: "/points",
+            color: "text-yellow-500",
+          },
+        ];
+
+  const supportMenuItems = [
+    {
+      icon: <FaQuestionCircle className="text-xl" />,
+      label: "Help Center",
+      path: "/help",
+      color: "text-gray-500",
+    },
+    {
+      icon: <FaEnvelope className="text-xl" />,
+      label: "Contact Us",
+      path: "/contact",
+      color: "text-blue-500",
+    },
+    {
+      icon: <GiWorld className="text-xl" />,
+      label: "Global Support",
+      path: "/",
+      color: "text-green-500",
+    },
+  ];
+
+  const UserProfileHeader = () => (
+    <div className="p-4 bg-linear-to-r from-blue-600 to-cyan-500 text-white">
+      <div className="flex items-center gap-3">
+        {user?.photoURL ? (
+          <img
+            src={user.photoURL}
+            alt={user.name || user.email}
+            className="w-14 h-14 rounded-full border-4 border-white/30"
+          />
+        ) : (
+          <div className="relative">
+            <FaUserCircle className="w-14 h-14 text-white/90" />
+            <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+          </div>
+        )}
+        <div className="flex-1">
+          <h3 className="font-bold text-lg truncate">
+            {user?.name || user?.email}
+          </h3>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs font-medium">
+              {role === "admin" ? "Administrator" : "Premium Member"}
+            </span>
+            <span className="text-xs opacity-90">⭐ 4.8</span>
+          </div>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+        <div className="bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+          <div className="text-sm font-bold">125</div>
+          <div className="text-xs opacity-90">Points</div>
+        </div>
+        <div className="bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+          <div className="text-sm font-bold">3</div>
+          <div className="text-xs opacity-90">Trips</div>
+        </div>
+        <div className="bg-white/10 rounded-lg p-2 backdrop-blur-sm">
+          <div className="text-sm font-bold">12</div>
+          <div className="text-xs opacity-90">Favs</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const GuestHeader = () => (
+    <div className="p-4 bg-linear-to-r from-blue-600 to-cyan-500 text-white">
+      <div className="flex items-center gap-3">
+        <div className="relative">
+          <FaUserCircle className="w-14 h-14 text-white/90" />
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center">
+            <span className="text-blue-600 text-xs font-bold">?</span>
+          </div>
+        </div>
+        <div className="flex-1">
+          <h3 className="font-bold text-lg">Guest User</h3>
+          <p className="text-sm opacity-90 mt-1">
+            Sign in to access member benefits
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const MenuItem = ({
+    icon,
+    label,
+    path,
+    onClick,
+    color = "text-gray-600",
+    bgColor = "bg-gray-50",
+  }) => (
+    <Link
+      href={path}
+      onClick={() => {
+        if (onClick) onClick();
+        else closeMenu();
+      }}
+      className="flex items-center gap-3 p-3 hover:bg-gray-50 active:bg-gray-100 rounded-xl transition-colors duration-200"
+    >
+      <div className={`p-2.5 rounded-lg ${bgColor} ${color}`}>{icon}</div>
+      <span className="font-medium text-gray-700">{label}</span>
+      <div className="flex-1"></div>
+      <div className="text-gray-400">
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+      </div>
+    </Link>
+  );
+
+  const MenuSection = ({ title, items }) => (
+    <div className="mb-2">
+      {title && (
+        <div className="px-4 py-2">
+          <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            {title}
+          </h4>
+        </div>
+      )}
+      <div className="space-y-1">
+        {items.map((item, index) => (
+          <MenuItem key={index} {...item} />
+        ))}
+      </div>
+    </div>
+  );
 
   return (
-    <>
+    <div className="relative" ref={menuRef}>
       <button
-        onClick={() => setIsOpen(true)}
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-white/12 text-white transition hover:bg-white/18"
-        aria-label="Open menu"
+        onClick={toggleMenu}
+        className="relative p-2 rounded-lg hover:bg-white/10 active:bg-white/20 transition-colors duration-200"
+        aria-label="Toggle menu"
       >
-        <FaBars size={20} />
+        {isMenuOpen ? (
+          <FaTimes className="h-6 w-6 text-white" />
+        ) : (
+          <FaBars className="h-6 w-6 text-white" />
+        )}
+        {user && !isMenuOpen && (
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+        )}
       </button>
 
-      {isOpen && (
-        <button
-          type="button"
-          aria-label="Close menu"
-          onClick={handleClose}
-          className="fixed inset-0 z-40 bg-[#041d26]/60 backdrop-blur-[2px]"
-        />
+      {isMenuOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"></div>
       )}
 
       <div
-        className={`fixed right-0 top-0 z-50 h-screen w-full max-w-sm bg-[#f8fbfc] shadow-2xl transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 h-full w-[85vw] max-w-sm bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-out ${
+          isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="flex h-full flex-col overflow-y-auto">
-          <div className="border-b border-[#d6e5ea] bg-linear-to-r from-[#09303c] via-[#0b6177] to-[#0f8aa5] px-5 py-5 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.28em] text-white/70">
-                  Navigation
-                </p>
-                <p className="mt-1 text-xl font-semibold">RCI Menu</p>
-              </div>
-              <button
-                onClick={handleClose}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-white/10 transition hover:bg-white/16"
-                aria-label="Close menu"
-              >
-                <FaXmark size={20} />
-              </button>
-            </div>
+        <div className="sticky top-0 z-10 bg-white border-b border-gray-100">
+          <div className="flex items-end justify-end px-4">
+            <button
+              onClick={closeMenu}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Close menu"
+            >
+              <FaTimes className="w-6 h-6 text-end text-gray-600" />
+            </button>
+          </div>
+        </div>
 
-            {user ? (
-              <div className="mt-5 rounded-3xl border border-white/14 bg-white/10 p-4">
-                <div className="flex items-center gap-3">
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt={user.name}
-                      className="h-12 w-12 rounded-full border border-white/20 object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/14">
-                      <FaUser size={24} className="text-white" />
-                    </div>
-                  )}
-                  <div>
-                    <p className="font-semibold text-white">{user.name}</p>
-                    <p className="text-xs uppercase tracking-[0.18em] text-white/70">
-                      {role} account
-                    </p>
-                  </div>
-                </div>
+        <div className="h-[calc(100vh-60px)] overflow-y-auto pb-24">
+          {user ? <UserProfileHeader /> : <GuestHeader />}
 
-                <div className="mt-4 grid grid-cols-3 gap-3 text-center text-xs">
-                  <div className="rounded-2xl bg-white/10 px-2 py-3">
-                    <p className="font-bold text-[#f4bc43]">0</p>
-                    <p className="mt-1 text-white/75">Points</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/10 px-2 py-3">
-                    <p className="font-bold text-[#f4bc43]">0</p>
-                    <p className="mt-1 text-white/75">Trips</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/10 px-2 py-3">
-                    <p className="font-bold text-[#f4bc43]">0</p>
-                    <p className="mt-1 text-white/75">Favorites</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-5 rounded-3xl border border-white/14 bg-white/10 p-4">
-                <p className="text-sm font-semibold text-white">
-                  Welcome guest
-                </p>
-                <p className="mt-1 text-sm text-white/72">
-                  Sign in to manage bookings and save favorites.
-                </p>
-                <div className="mt-4 flex gap-2">
-                  <Link
-                    href="/login"
-                    onClick={handleClose}
-                    className="flex-1 rounded-full border border-white/18 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-white/10"
-                  >
-                    Log In
-                  </Link>
-                  <Link
-                    href="/registration"
-                    onClick={handleClose}
-                    className="flex-1 rounded-full bg-[#f4bc43] px-4 py-2 text-center text-sm font-semibold text-[#072a34] transition hover:bg-[#ffd065]"
-                  >
-                    Sign Up
-                  </Link>
-                </div>
+          <div className="p-4">
+            {!user && (
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <Link
+                  href="/login"
+                  onClick={closeMenu}
+                  className="px-4 py-3 text-center font-semibold text-blue-600 border-2 border-blue-600 rounded-xl hover:bg-blue-50 transition-colors"
+                >
+                  Log In
+                </Link>
+                <Link
+                  href="/registration"
+                  onClick={closeMenu}
+                  className="px-4 py-3 text-center font-semibold text-white bg-linear-to-r from-blue-600 to-cyan-500 rounded-xl hover:shadow-lg transition-all"
+                >
+                  Join Free
+                </Link>
               </div>
             )}
-          </div>
 
-          {user && (
-            <div className="border-b border-[#d6e5ea] px-5 py-5">
-              <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
-                My Account
+            <MenuSection items={mainMenuItems} />
+
+            <div className="my-6 px-4">
+              <div className="h-px bg-linear-to-r from-transparent via-gray-200 to-transparent"></div>
+            </div>
+
+            {user && (
+              <>
+                <MenuSection title="My Account" items={userMenuItems} />
+                <div className="my-6 px-4">
+                  <div className="h-px bg-linear-to-r from-transparent via-gray-200 to-transparent"></div>
+                </div>
+              </>
+            )}
+
+            <MenuSection title="Support & Resources" items={supportMenuItems} />
+
+            <div className="mt-8 px-4">
+              <div className="p-4 bg-linear-to-br from-gray-50 to-white border border-gray-100 rounded-2xl">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2 bg-linear-to-r from-amber-500 to-orange-400 rounded-lg">
+                    <FaStar className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">
+                      RCI Mobile App
+                    </h4>
+                    <p className="text-sm text-gray-600">Book on the go</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="flex-1 px-3 py-2 bg-black text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
+                    App Store
+                  </button>
+                  <button className="flex-1 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                    Play Store
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 px-4">
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/privacy"
+                  onClick={closeMenu}
+                  className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+                <Link
+                  href="/terms"
+                  onClick={closeMenu}
+                  className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                >
+                  Terms of Service
+                </Link>
+                <Link
+                  href="/cookies"
+                  onClick={closeMenu}
+                  className="text-xs text-gray-500 hover:text-blue-600 transition-colors"
+                >
+                  Cookie Policy
+                </Link>
+              </div>
+              <p className="text-xs text-gray-400 mt-4">
+                © {new Date().getFullYear()} RCI, LLC. All rights reserved.
               </p>
-              <nav className="flex flex-col gap-2">
-                {menuItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={`${item.href}-${item.label}`}
-                      href={item.href}
-                      onClick={handleClose}
-                      className="flex items-center gap-3 rounded-2xl px-3 py-3 text-slate-700 transition hover:bg-white hover:text-[#0b6177] hover:shadow-sm"
-                    >
-                      <Icon size={18} />
-                      <span className="text-sm font-medium">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </nav>
             </div>
-          )}
-
-          <div className="border-b border-[#d6e5ea] px-5 py-5">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
-              Explore
-            </p>
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="/"
-                onClick={handleClose}
-                className="flex items-center gap-3 rounded-2xl px-3 py-3 text-slate-700 transition hover:bg-white hover:text-[#0b6177] hover:shadow-sm"
-              >
-                <IoSearchSharp size={18} />
-                <span className="text-sm font-medium">Home</span>
-              </Link>
-              <Link
-                href="/lastCallVacation"
-                onClick={handleClose}
-                className="flex items-center gap-3 rounded-2xl px-3 py-3 text-slate-700 transition hover:bg-white hover:text-[#0b6177] hover:shadow-sm"
-              >
-                <FaCalendar size={18} />
-                <span className="text-sm font-medium">Book Vacation</span>
-              </Link>
-            </nav>
           </div>
-
-          <div className="border-b border-[#d6e5ea] px-5 py-5">
-            <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
-              Support
-            </p>
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="/help"
-                onClick={handleClose}
-                className="flex items-center gap-3 rounded-2xl px-3 py-3 text-slate-700 transition hover:bg-white hover:text-[#0b6177] hover:shadow-sm"
-              >
-                <FaInfoCircle size={18} />
-                <span className="text-sm font-medium">Help Center</span>
-              </Link>
-              <Link
-                href="/contact"
-                onClick={handleClose}
-                className="flex items-center gap-3 rounded-2xl px-3 py-3 text-slate-700 transition hover:bg-white hover:text-[#0b6177] hover:shadow-sm"
-              >
-                <FaPhone size={18} />
-                <span className="text-sm font-medium">Contact Us</span>
-              </Link>
-            </nav>
-          </div>
-
-          <div className="border-b border-[#d6e5ea] px-5 py-5">
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="/privacy"
-                onClick={handleClose}
-                className="text-xs text-slate-500 transition hover:text-[#0b6177]"
-              >
-                Privacy Policy
-              </Link>
-              <Link
-                href="/terms"
-                onClick={handleClose}
-                className="text-xs text-slate-500 transition hover:text-[#0b6177]"
-              >
-                Terms of Service
-              </Link>
-              <Link
-                href="/cookies"
-                onClick={handleClose}
-                className="text-xs text-slate-500 transition hover:text-[#0b6177]"
-              >
-                Cookie Policy
-              </Link>
-            </nav>
-          </div>
-
-          {user && (
-            <div className="mt-auto px-5 py-5">
-              <button
-                onClick={handleSignOut}
-                className="flex w-full items-center justify-center gap-2 rounded-full bg-red-50 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-100"
-              >
-                <FaSignOutAlt size={18} />
-                Sign Out
-              </button>
-            </div>
-          )}
         </div>
+
+        {user && (
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-linear-to-r from-gray-50 to-white border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 active:scale-[0.98] transition-all duration-200"
+            >
+              <FaSignOutAlt className="text-lg text-gray-600" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
