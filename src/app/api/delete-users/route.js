@@ -1,6 +1,8 @@
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 
+export const runtime = 'nodejs';
+
 export async function DELETE(req) {
   try {
     await connectDB();
@@ -21,8 +23,10 @@ export async function DELETE(req) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
+    const status = error.name === 'MongoConnectionError' ? 503 : 500;
+
     return new Response(JSON.stringify({ message: error.message }), {
-      status: 500,
+      status,
       headers: { 'Content-Type': 'application/json' },
     });
   }
