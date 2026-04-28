@@ -17,8 +17,8 @@ export default function Header() {
   const isActive = (path) => pathname === path;
 
   const navLinks = [
-    { label: "HOME", href: "/" },
-    { label: "BOOK VACATION", href: "/lastCallVacation" },
+    { label: "Home", href: "/" },
+    { label: "Book Vacation", href: "/lastCallVacation" },
   ];
 
   const userMenuLinks = user
@@ -41,140 +41,181 @@ export default function Header() {
 
   return (
     <>
-      {/* Top Bar - Desktop Only */}
-      <div className="hidden bg-linear-to-r from-blue-900 to-blue-800 px-6 py-2 text-xs text-white md:block">
+      <div className="hidden bg-linear-to-r from-[#082631] via-[#0a3544] to-[#0d4556] px-6 py-2 text-xs text-white/80 lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex gap-6">
             <span>Global | EN</span>
-            <span>📞 1-800-RCI-CLUB</span>
+            <span>1-800-RCI-CLUB</span>
           </div>
           <div className="flex gap-6">
             <span>Member Since 1974</span>
-            <Link href="/help" className="hover:underline">
+            <Link href="/help" className="transition hover:text-white">
               Help Center
             </Link>
-            <Link href="/contact" className="hover:underline">
+            <Link href="/contact" className="transition hover:text-white">
               Contact Us
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Main Header */}
-      <header className="sticky top-0 z-40 border-b border-[#035c73] bg-[#037092] text-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          {/* Logo */}
-          <Link href="/" className="text-2xl font-bold text-white">
-            <img src={logo.src} alt="RCI" className="h-10 w-10" />
-          </Link>
+      <header className="sticky top-0 z-40 border-b border-[#0f4b5d] bg-linear-to-r from-[#09303c] via-[#0b6177] to-[#0f8aa5] text-white shadow-[0_16px_38px_rgba(5,32,43,0.24)]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="flex items-center gap-3 py-4">
+            <Link
+              href="/"
+              className="flex shrink-0 items-center gap-3 text-white"
+            >
+              <img src={logo.src} alt="RCI" className="h-10 w-10 rounded-xl" />
+              <div className="hidden min-w-0 sm:block">
+                <p className="text-lg font-semibold tracking-[0.2em] text-white">
+                  RCI
+                </p>
+                <p className="text-xs uppercase tracking-[0.26em] text-white/70">
+                  Vacation Exchange
+                </p>
+              </div>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden gap-8 md:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`relative text-sm font-semibold transition ${
-                  isActive(link.href)
-                    ? "text-white"
-                    : "text-white/80 hover:text-white"
-                }`}
-              >
-                {link.label}
-                {isActive(link.href) && (
-                  <div className="absolute -bottom-1 left-0 right-0 h-1 bg-[#037092]" />
-                )}
-              </Link>
-            ))}
-          </nav>
+            <nav className="hidden items-center gap-2 lg:flex lg:ml-10">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                    isActive(link.href)
+                      ? "bg-[#f4bc43] text-[#072a34] shadow-sm"
+                      : "text-white/78 hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
 
-          {/* Desktop User Actions */}
-          <div className="hidden items-center gap-6 md:flex">
-            {user ? (
-              <>
-                {/* Notification Bell */}
-                <button className="relative text-white hover:text-slate-100">
-                  <FaBell size={20} />
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
-                    1
-                  </span>
-                </button>
+            <div className="ml-auto hidden items-center gap-3 lg:flex">
+              {user ? (
+                <>
+                  <button className="relative rounded-full border border-white/15 bg-white/10 p-3 text-white transition hover:bg-white/16">
+                    <FaBell size={18} />
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#f4bc43] text-[10px] font-bold text-[#072a34]">
+                      1
+                    </span>
+                  </button>
 
-                {/* User Menu */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 rounded-full border border-white/30 px-4 py-2 transition hover:bg-white/10"
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowUserMenu((value) => !value)}
+                      className="flex items-center gap-3 rounded-full border border-white/15 bg-white/10 px-3 py-2 text-left transition hover:bg-white/16"
+                    >
+                      {user.photoURL ? (
+                        <img
+                          src={user.photoURL}
+                          alt={user.name}
+                          className="h-10 w-10 rounded-full border border-white/20 object-cover"
+                        />
+                      ) : (
+                        <FaUserCircle size={28} className="text-white" />
+                      )}
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold text-white">
+                          {user.name}
+                        </span>
+                        <span className="block text-xs uppercase tracking-[0.18em] text-white/65">
+                          {role}
+                        </span>
+                      </span>
+                    </button>
+
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-3 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-2xl">
+                        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+                          <p className="font-semibold">{user.name}</p>
+                          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
+                            {role} account
+                          </p>
+                        </div>
+                        <nav className="flex flex-col py-2">
+                          {userMenuLinks.map((link) => (
+                            <Link
+                              key={`${link.href}-${link.label}`}
+                              href={link.href}
+                              className="px-4 py-2.5 text-sm transition hover:bg-slate-50"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              {link.label}
+                            </Link>
+                          ))}
+                        </nav>
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full border-t border-slate-200 px-4 py-3 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="rounded-full border border-white/18 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/registration"
+                    className="rounded-full bg-[#f4bc43] px-5 py-2 text-sm font-semibold text-[#072a34] transition hover:bg-[#ffd065]"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <div className="ml-auto flex items-center gap-2 lg:hidden">
+              {user ? (
+                <Link
+                  href="/profile"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-white/12 transition hover:bg-white/18"
+                  aria-label="Open profile"
                 >
                   {user.photoURL ? (
                     <img
                       src={user.photoURL}
                       alt={user.name}
-                      className="h-8 w-8 rounded-full"
+                      className="h-9 w-9 rounded-full border border-white/20 object-cover"
                     />
                   ) : (
-                    <FaUserCircle size={24} className="text-white" />
+                    <FaUserCircle size={28} className="text-white" />
                   )}
-                  <span className="text-sm font-semibold text-white"/>
-                  </button>
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    className="rounded-full border border-white/18 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10 sm:px-4 sm:text-sm"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    href="/registration"
+                    className="rounded-full bg-[#f4bc43] px-3 py-2 text-xs font-semibold text-[#072a34] transition hover:bg-[#ffd065] sm:px-4 sm:text-sm"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
 
-                  {showUserMenu && (
-                    <div className="absolute right-0 mt-2 w-48 rounded-lg border border-slate-200 bg-white shadow-lg">
-                      <div className="border-b border-slate-200 px-4 py-3">
-                        <p className="font-semibold text-gray-900">
-                          {user.name}
-                        </p>
-                        <p className="text-xs text-gray-500 capitalize">
-                          {role} Account
-                        </p>
-                      </div>
-                      <nav className="flex flex-col">
-                        {userMenuLinks.map((link) => (
-                          <Link
-                            key={`${link.href}-${link.label}`}
-                            href={link.href}
-                            className="px-4 py-2 text-sm text-gray-700 hover:bg-slate-50"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            {link.label}
-                          </Link>
-                        ))}
-                      </nav>
-                      <button
-                        onClick={handleSignOut}
-                        className="w-full border-t border-slate-200 px-4 py-2 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-sm font-semibold text-white hover:underline"
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/registration"
-                  className="rounded-lg bg-white px-6 py-2 text-sm font-semibold text-[#037092] hover:bg-slate-100"
-                >
-                  Join Now
-                </Link>
-              </>
-            )}
+              <MobileDropdown />
+            </div>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
-            <MobileDropdown />
+          <div className="border-t border-white/12 pb-4 pt-1">
+            <SearchBarMobile />
           </div>
-        </div>
-        <div className="mx-auto max-w-7xl px-6 pb-4">
-          <SearchBarMobile />
         </div>
       </header>
     </>
