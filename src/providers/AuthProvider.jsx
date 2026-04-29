@@ -31,6 +31,30 @@ export default function AuthProvider({ children }) {
     return localPart;
   };
 
+  const sortBookingsByNewest = (bookings = []) =>
+    [...bookings].sort((firstBooking, secondBooking) => {
+      const firstDate = new Date(
+        firstBooking.createdAt || firstBooking.bookingDate || 0,
+      ).getTime();
+      const secondDate = new Date(
+        secondBooking.createdAt || secondBooking.bookingDate || 0,
+      ).getTime();
+
+      return secondDate - firstDate;
+    });
+
+  const mergeBookingIntoList = (currentBookings, nextBooking) => {
+    if (!nextBooking) {
+      return currentBookings;
+    }
+
+    const remainingBookings = currentBookings.filter(
+      (booking) => booking._id !== nextBooking._id,
+    );
+
+    return sortBookingsByNewest([nextBooking, ...remainingBookings]);
+  };
+
   const upsertAndGetMongoUser = async (
     firebaseUser,
     membership = "Bronze",
@@ -240,7 +264,7 @@ export default function AuthProvider({ children }) {
       const response = await fetch(`/api/bookings?email=${email}`);
       if (response.ok) {
         const data = await response.json();
-        setBookingsData(data);
+        setBookingsData(sortBookingsByNewest(data));
       }
     } catch (error) {
       console.error("Fetch bookings data error:", error);
@@ -252,7 +276,7 @@ export default function AuthProvider({ children }) {
       const response = await fetch("/api/all-bookings");
       if (response.ok) {
         const data = await response.json();
-        setAllBookingsData(data);
+        setAllBookingsData(sortBookingsByNewest(data));
       }
     } catch (error) {
       console.error("Fetch all bookings error:", error);
@@ -294,6 +318,23 @@ export default function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error("Set user role error:", error);
+    }
+  };
+
+  const addBooking = (booking) => {
+    if (!booking) {
+      return;
+    }
+
+    setAllBookingsData((currentBookings) =>
+      mergeBookingIntoList(currentBookings, booking),
+    );
+
+    if (booking.email === user?.email) {
+      setBookingsData((currentBookings) =>
+        mergeBookingIntoList(currentBookings, booking),
+      );
+      setPaymentInfoData(booking);
     }
   };
 
@@ -356,6 +397,7 @@ export default function AuthProvider({ children }) {
     fetchAllUsersData,
     fetchPaymentInformation,
     setUserRole,
+    addBooking,
   };
 
   return (

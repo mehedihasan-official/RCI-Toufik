@@ -2,7 +2,7 @@
 
 import { AuthContext } from '@/providers/AuthProvider';
 import { useRouter } from 'next/navigation';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useState } from 'react';
 
 const formatCardNumber = (value) => {
   return value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
@@ -17,9 +17,16 @@ const formatDate = (value) =>
 
 export default function PaymentPage() {
   const router = useRouter();
-  const { user } = useContext(AuthContext);
+  const { user, addBooking } = useContext(AuthContext);
 
-  const [paymentData, setPaymentData] = useState(null);
+  const paymentData = (() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const storedPaymentData = window.localStorage.getItem('paymentData');
+    return storedPaymentData ? JSON.parse(storedPaymentData) : null;
+  })();
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
@@ -36,13 +43,6 @@ export default function PaymentPage() {
   });
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-
-  useEffect(() => {
-    const data = localStorage.getItem('paymentData');
-    if (data) {
-      setPaymentData(JSON.parse(data));
-    }
-  }, []);
 
   const handleBillingChange = (event) => {
     const { name, value } = event.target;
@@ -128,6 +128,9 @@ export default function PaymentPage() {
       });
 
       if (res.ok) {
+        const savedBooking = await res.json();
+        addBooking(savedBooking);
+
         localStorage.setItem(
           'paymentData',
           JSON.stringify({
