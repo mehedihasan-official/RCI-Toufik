@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useContext, useState } from "react";
 import { FaBell, FaUserCircle } from "react-icons/fa";
-import logo from "../../public/Rci-vertical.png";
+import logo from "../../public/rci-logo-white.png";
 import MobileDropdown from "./MobileDropdown";
 import SearchBarMobile from "./SearchBarMobile";
 
@@ -41,7 +41,7 @@ export default function Header() {
 
   return (
     <>
-      <div className="hidden bg-linear-to-r from-[#082631] via-[#0a3544] to-[#0d4556] px-6 py-2 text-xs text-white/80 lg:block">
+      <div className="hidden bg-[#0d4556] px-6 py-2 text-xs text-white/80 lg:block">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex gap-6">
             <span>Global | EN</span>
@@ -59,22 +59,15 @@ export default function Header() {
         </div>
       </div>
 
-      <header className="sticky top-0 z-40 border-b border-[#0f4b5d] bg-linear-to-r from-[#09303c] via-[#0b6177] to-[#0f8aa5] text-white shadow-[0_16px_38px_rgba(5,32,43,0.24)]">
+      <header className="sticky top-0 z-40 border-b border-[#0f4b5d] bg-[#037092]  text-white shadow-[0_16px_38px_rgba(5,32,43,0.24)]">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex items-center gap-3 py-4">
             <Link
               href="/"
               className="flex shrink-0 items-center gap-3 text-white"
             >
-              <img src={logo.src} alt="RCI" className="h-10 w-10 rounded-xl" />
-              <div className="hidden min-w-0 sm:block">
-                <p className="text-lg font-semibold tracking-[0.2em] text-white">
-                  RCI
-                </p>
-                <p className="text-xs uppercase tracking-[0.26em] text-white/70">
-                  Vacation Exchange
-                </p>
-              </div>
+              <img src={logo.src} alt="RCI" className="h-10 w-10" />
+              
             </Link>
 
             <nav className="hidden items-center gap-2 lg:flex lg:ml-10">
@@ -128,19 +121,19 @@ export default function Header() {
                     </button>
 
                     {showUserMenu && (
-                      <div className="absolute right-0 mt-3 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-2xl">
+                      <div className="absolute right-0 z-50 mt-3 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-2xl">
                         <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
                           <p className="font-semibold">{user.name}</p>
                           <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
                             {role} account
                           </p>
                         </div>
-                        <nav className="flex flex-col py-2">
+                        <nav className="flex flex-col py-2 z-50">
                           {userMenuLinks.map((link) => (
                             <Link
                               key={`${link.href}-${link.label}`}
                               href={link.href}
-                              className="px-4 py-2.5 text-sm transition hover:bg-slate-50"
+                              className="px-4 py-2.5  text-sm transition hover:bg-slate-50"
                               onClick={() => setShowUserMenu(false)}
                             >
                               {link.label}
@@ -213,7 +206,7 @@ export default function Header() {
             </div>
           </div>
 
-          <div className="border-t border-white/12 pb-4 pt-1">
+          <div className="border-t border-white/12 pb-4  pt-1">
             <SearchBarMobile />
           </div>
         </div>

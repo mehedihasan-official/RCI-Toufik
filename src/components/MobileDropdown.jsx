@@ -75,27 +75,7 @@ export default function MobileDropdown() {
       color: "text-emerald-500",
       bgColor: "bg-emerald-50",
     },
-    {
-      icon: <FaGlobeAmericas className="text-xl" />,
-      label: "Destinations",
-      path: "/search",
-      color: "text-purple-500",
-      bgColor: "bg-purple-50",
-    },
-    {
-      icon: <MdLocalOffer className="text-xl" />,
-      label: "Special Offers",
-      path: "/",
-      color: "text-amber-500",
-      bgColor: "bg-amber-50",
-    },
-    {
-      icon: <FaInfoCircle className="text-xl" />,
-      label: "How It Works",
-      path: "/",
-      color: "text-cyan-500",
-      bgColor: "bg-cyan-50",
-    },
+  
   ];
 
   const userMenuItems =
@@ -111,13 +91,13 @@ export default function MobileDropdown() {
             icon: <FaUserCircle className="text-xl" />,
             label: "Profile",
             path: "/profile",
-            color: "text-blue-500",
+            color: "text-[#037092]",
           },
           {
             icon: <FaShieldAlt className="text-xl" />,
             label: "Security",
             path: "/profile",
-            color: "text-green-500",
+            color: "text-[#037092]",
           },
         ]
       : [
@@ -125,7 +105,7 @@ export default function MobileDropdown() {
             icon: <MdDashboard className="text-xl" />,
             label: "Dashboard",
             path: "/dashboard/overview",
-            color: "text-indigo-500",
+            color: "text-[#037092]",
           },
           {
             icon: <FaUserCircle className="text-xl" />,
@@ -181,7 +161,7 @@ export default function MobileDropdown() {
   ];
 
   const UserProfileHeader = () => (
-    <div className="p-4 bg-linear-to-r from-blue-600 to-cyan-500 text-white">
+    <div className="p-4 bg-[#037092] text-white">
       <div className="flex items-center gap-3">
         {user?.photoURL ? (
           <img
