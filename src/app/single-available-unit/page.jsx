@@ -1,9 +1,10 @@
 "use client";
 
+import Loading from "@/components/Loading";
 import { AuthContext } from "@/providers/AuthProvider";
 import { addDays } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { Suspense, useContext, useEffect, useState } from "react";
 import { DateRangePicker } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
@@ -18,7 +19,7 @@ const formatDate = (date) =>
     year: "numeric",
   });
 
-export default function SingleAvailableUnitPage() {
+function SingleAvailableUnitPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useContext(AuthContext);
@@ -274,5 +275,13 @@ export default function SingleAvailableUnitPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function SingleAvailableUnitPage() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <SingleAvailableUnitPageContent />
+    </Suspense>
   );
 }
