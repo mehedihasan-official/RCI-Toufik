@@ -5,7 +5,7 @@ import AvailableUnits from "@/components/singleResortPage/AvailableUnits";
 import ResortDetails from "@/components/singleResortPage/ResortDetails";
 import Reviews from "@/components/singleResortPage/Reviews";
 import RoomDetails from "@/components/singleResortPage/RoomDetails";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 export default function FilterContent({ currentResort }) {
   const {
@@ -20,35 +20,6 @@ export default function FilterContent({ currentResort }) {
   } = currentResort || {};
 
   const [activeMenu, setActiveMenu] = useState("Available Units");
-  const filterMenuRef = useRef(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!filterMenuRef.current) return;
-      if (window.pageYOffset > filterMenuRef.current.offsetTop) {
-        filterMenuRef.current.classList.add(
-          "fixed",
-          "top-0",
-          "w-full",
-          "z-10",
-          "bg-white",
-          "shadow-md",
-        );
-      } else {
-        filterMenuRef.current.classList.remove(
-          "fixed",
-          "top-0",
-          "w-full",
-          "z-10",
-          "bg-white",
-          "shadow-md",
-        );
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const menuContent = {
     "Available Units": <AvailableUnits currentResort={currentResort} />,
@@ -60,32 +31,34 @@ export default function FilterContent({ currentResort }) {
         check_out_time={check_out_time}
       />
     ),
-    "Area info": <AreaInfo place_name={place_name} location={location} />,
+    "Area Info": <AreaInfo place_name={place_name} location={location} />,
     Reviews: <Reviews reviews_amount={reviews_amount} rating={rating} />,
   };
 
   return (
-    <div className="overflow-x-hidden">
-      <div ref={filterMenuRef} className="carousel bg-transparent py-3">
-        <ul className="carousel-item flex space-x-5 overflow-x-auto pl-3 text-xl font-semibold my-5">
-          {Object.keys(menuContent).map((menu) => (
-            <li key={menu}>
+    <section className="space-y-5">
+      <div className="sticky top-[7.25rem] z-20 -mx-4 px-4 sm:top-[8.5rem] sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="overflow-x-auto rounded-full border border-slate-200 bg-white/92 p-2 shadow-[0_10px_28px_rgba(15,23,42,0.08)] backdrop-blur">
+          <div className="flex min-w-max gap-2">
+            {Object.keys(menuContent).map((menu) => (
               <button
+                key={menu}
                 type="button"
                 onClick={() => setActiveMenu(menu)}
-                className={`rounded-full px-4 py-2 transition ${
+                className={`rounded-full px-4 py-2.5 text-sm font-semibold transition sm:text-base ${
                   activeMenu === menu
-                    ? "active underline text-[#037092]"
-                    : "text-slate-600 hover:text-[#037092]"
+                    ? "bg-[#037092] text-white shadow-sm"
+                    : "text-slate-600 hover:bg-[#e6f8fc] hover:text-[#037092]"
                 }`}
               >
                 {menu}
               </button>
-            </li>
-          ))}
-        </ul>
+            ))}
+          </div>
+        </div>
       </div>
+
       <div>{menuContent[activeMenu]}</div>
-    </div>
+    </section>
   );
 }

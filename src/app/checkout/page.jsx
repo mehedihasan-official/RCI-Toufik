@@ -1,287 +1,262 @@
-"use client";
+'use client';
 
-import GuestInfo from "@/components/GuestInfo";
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import GuestInfo from '@/components/GuestInfo';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-const getTaxInclusivePrice = (basePrice) => {
-  switch (basePrice) {
-    case 309:
-      return 329.08;
-    case 339:
-      return 361.02;
-    case 379:
-      return 403.63;
-    default:
-      return basePrice;
+const getTaxInclusivePrice = (base) => ({ 309: 329.08, 339: 361.02, 379: 403.63 }[base] || base);
+
+const getResortImage = (resort) => {
+  if (!resort) {
+    return '';
   }
+
+  const imageKeys = Object.keys(resort).filter((key) => key.startsWith('img'));
+  const image = imageKeys.map((key) => resort[key]).find(Boolean);
+  return image || resort.img || '';
 };
 
-const calculateNights = (startDate, endDate) =>
-  Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+const formatDate = (value) =>
+  new Date(value).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
 export default function CheckoutPage() {
   const router = useRouter();
   const [checkoutDetails, setCheckoutDetails] = useState(null);
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedOption, setSelectedOption] = useState('RCI Member');
   const [guestInfo, setGuestInfo] = useState(null);
-  const [formError, setFormError] = useState("");
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = localStorage.getItem("checkoutDetails");
-    if (!raw) return;
-
-    try {
-      setCheckoutDetails(JSON.parse(raw));
-    } catch (error) {
-      console.error("Unable to parse checkout details", error);
+    const data = localStorage.getItem('checkoutDetails');
+    if (data) {
+      setCheckoutDetails(JSON.parse(data));
     }
   }, []);
 
-  useEffect(() => {
-    if (selectedOption !== "A Guest") {
-      setGuestInfo(null);
-    }
-  }, [selectedOption]);
-
-  const nights = useMemo(() => {
-    if (!checkoutDetails) return 0;
-    return calculateNights(checkoutDetails.startDate, checkoutDetails.endDate);
-  }, [checkoutDetails]);
-
-  const taxInclusivePrice = useMemo(() => {
-    if (!checkoutDetails) return 0;
-    return getTaxInclusivePrice(checkoutDetails.price || 0);
-  }, [checkoutDetails]);
-
   const handleContinue = () => {
-    setFormError("");
-    if (!selectedOption) {
-      setFormError("Please choose who is checking in.");
+    if (!checkoutDetails) {
       return;
     }
 
-    if (selectedOption === "A Guest") {
+    if (selectedOption === 'A Guest') {
       const requiredFields = [
-        "firstName",
-        "lastName",
-        "address1",
-        "country",
-        "city",
-        "postalCode",
-        "email",
-        "phoneNumber",
-        "agreeTerms",
+        'firstName',
+        'lastName',
+        'address1',
+        'country',
+        'city',
+        'postalCode',
+        'email',
+        'phoneNumber',
+        'agreeTerms',
       ];
 
-      const missing = requiredFields.some(
-        (field) => !guestInfo?.[field] || guestInfo[field] === false,
-      );
-
-      if (missing) {
-        setFormError("Please complete the guest information form.");
+      const hasMissingField = requiredFields.some((field) => !guestInfo?.[field]);
+      if (hasMissingField) {
+        setErrorMessage('Please complete the guest information form before continuing.');
         return;
       }
     }
 
-    const paymentDetails = {
-      resort: checkoutDetails?.resort,
-      startDate: checkoutDetails?.startDate,
-      endDate: checkoutDetails?.endDate,
-      unitType: checkoutDetails?.unitType,
-      price:
-        checkoutDetails?.vacationType === "lastCall" ? taxInclusivePrice : 0,
-      points: checkoutDetails?.points || 0,
-      paymentMethod:
-        checkoutDetails?.vacationType === "lastCall" ? "cash" : "points",
-      totalPoints: checkoutDetails?.points || 0,
-      nights,
-      pointsPerNight: checkoutDetails?.pointsPerNight || 0,
-      weekendSurcharge: checkoutDetails?.weekendSurcharge || 0,
-      isGuest: selectedOption === "A Guest" ? "True" : "False",
-      guestInfo: selectedOption === "A Guest" ? guestInfo : null,
-    };
+    setErrorMessage('');
 
-    localStorage.setItem("paymentDetails", JSON.stringify(paymentDetails));
-    router.push("/payment");
+    const {
+      resort,
+      startDate,
+      endDate,
+      unitType,
+      paymentMethod,
+      price,
+      points,
+      nights,
+      weekendSurcharge,
+      basePoints,
+      weekendNights,
+    } = checkoutDetails;
+
+    localStorage.setItem(
+      'paymentData',
+      JSON.stringify({
+        resort,
+        startDate,
+        endDate,
+        unitType,
+        paymentMethod,
+        price: paymentMethod === 'cash' ? price : 0,
+        points: paymentMethod === 'points' ? points : 0,
+        isGuest: selectedOption === 'A Guest' ? 'True' : 'False',
+        guestInfo: selectedOption === 'A Guest' ? guestInfo : null,
+        nights,
+        weekendSurcharge,
+        basePoints,
+        weekendNights,
+      }),
+    );
+    router.push('/payment');
   };
 
   if (!checkoutDetails) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-20">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-          <h2 className="text-2xl font-semibold text-slate-900">
-            No checkout details found
-          </h2>
-          <p className="mt-4 text-slate-600">
-            Please complete your booking selection before continuing.
+      <main className="min-h-screen bg-slate-50 px-4 py-10 md:px-6">
+        <div className="mx-auto max-w-2xl rounded-2xl shadow-md p-6 bg-white text-center">
+          <h1 className="text-2xl font-semibold text-slate-900">Checkout unavailable</h1>
+          <p className="mt-3 text-sm text-slate-600">
+            Please return to the booking page and try again.
           </p>
         </div>
       </main>
     );
   }
 
-  const paymentMethod =
-    checkoutDetails.vacationType === "lastCall" ? "cash" : "points";
+  const {
+    resort,
+    startDate,
+    endDate,
+    unitType,
+    paymentMethod,
+    price,
+    points,
+    nights,
+    basePrice,
+  } = checkoutDetails;
+
+  const resortImage = getResortImage(resort);
+  const totalCashPrice = paymentMethod === 'cash' ? getTaxInclusivePrice(basePrice || price) : 0;
+  const totalLabel =
+    paymentMethod === 'cash'
+      ? `$${Number(totalCashPrice || price || 0).toFixed(2)} USD`
+      : `${Number(points || 0).toLocaleString()} RCI Points`;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <div className="grid gap-6 lg:grid-cols-[1.25fr_0.85fr]">
-          <div className="space-y-6 rounded-3xl bg-white p-8 shadow-sm">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                  Reservation details
-                </p>
-                <h1 className="mt-2 text-3xl font-semibold text-[#037092]">
-                  Checkout
-                </h1>
+    <main className="min-h-screen bg-slate-50 pb-28">
+      <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-10">
+        <h1 className="text-3xl font-bold text-slate-900">Checkout</h1>
+
+        <section className="mt-6 rounded-2xl shadow-md p-4 bg-white">
+          <div className="overflow-hidden rounded-2xl bg-slate-100">
+            {resortImage ? (
+              <img src={resortImage} alt={resort?.place_name} className="h-48 w-full object-cover" />
+            ) : (
+              <div className="flex h-48 items-center justify-center bg-[#e6f8fc] text-[#037092]">
+                Resort image unavailable
               </div>
-              <div className="rounded-3xl bg-[#e6f8fc] px-5 py-4 text-slate-700">
-                <p className="text-sm">Payment method</p>
-                <p className="mt-2 text-lg font-semibold text-[#037092]">
-                  {paymentMethod === "cash" ? "Cash" : "Points"}
+            )}
+          </div>
+          <div className="mt-4">
+            <p className="text-sm text-slate-500">{resort?.location}</p>
+            <h2 className="mt-1 text-2xl font-semibold text-slate-900">{resort?.place_name}</h2>
+            <p className="mt-1 text-sm text-slate-500">Resort ID {resort?.resort_ID || 'N/A'}</p>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 p-4">
+                <p className="text-sm text-slate-500">Travel dates</p>
+                <p className="mt-1 font-semibold text-slate-900">
+                  {formatDate(startDate)} - {formatDate(endDate)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 p-4">
+                <p className="text-sm text-slate-500">Check-in / Check-out</p>
+                <p className="mt-1 font-semibold text-slate-900">
+                  {formatDate(startDate)} / {formatDate(endDate)}
+                </p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 p-4">
+                <p className="text-sm text-slate-500">Unit & stay</p>
+                <p className="mt-1 font-semibold text-slate-900">
+                  {unitType} - {nights} nights
                 </p>
               </div>
             </div>
+          </div>
+        </section>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl border border-slate-200 bg-[#f8fbfc] p-6">
-                <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                  Resort
+        <section className="mt-6 rounded-2xl shadow-md p-4 bg-white">
+          <h2 className="text-lg font-semibold text-slate-900">Payment Method</h2>
+          <div className="mt-4 rounded-2xl border border-slate-200 p-4">
+            {paymentMethod === 'cash' ? (
+              <>
+                <p className="text-lg font-semibold text-[#f59e0b]">Cash Payment</p>
+                <p className="mt-2 text-sm text-slate-600">
+                  Total: ${Number(totalCashPrice || price || 0).toFixed(2)} USD (tax included)
                 </p>
-                <p className="mt-2 text-xl font-semibold text-slate-900">
-                  {checkoutDetails.resort?.place_name}
+              </>
+            ) : (
+              <>
+                <p className="text-lg font-semibold text-[#037092]">Points Payment</p>
+                <p className="mt-2 text-sm text-slate-600">
+                  Total: {Number(points || 0).toLocaleString()} RCI Points
                 </p>
-                <p className="mt-2 text-slate-600">
-                  {checkoutDetails.resort?.location}
-                </p>
-              </div>
-              <div className="rounded-3xl border border-slate-200 bg-[#f8fbfc] p-6">
-                <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                  Unit
-                </p>
-                <p className="mt-2 text-xl font-semibold text-slate-900">
-                  {checkoutDetails.unitType}
-                </p>
-                <p className="mt-2 text-slate-600">
-                  {new Date(checkoutDetails.startDate).toLocaleDateString()} -{" "}
-                  {new Date(checkoutDetails.endDate).toLocaleDateString()}
-                </p>
-                <p className="mt-3 text-sm text-slate-500">{nights} nights</p>
-              </div>
-            </div>
+              </>
+            )}
+          </div>
+        </section>
 
-            <div className="rounded-3xl border border-slate-200 bg-[#f8fbfc] p-6">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                Who's Checking-in?
-              </p>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                {[
-                  { label: "RCI Member", value: "RCI Member" },
-                  { label: "A Guest", value: "A Guest" },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setSelectedOption(option.value)}
-                    className={`rounded-3xl border p-5 text-left transition ${
-                      selectedOption === option.value
-                        ? "border-[#037092] bg-[#e6f8fc]"
-                        : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-lg font-semibold text-slate-900">
-                          {option.label}
-                        </p>
-                        <p className="mt-1 text-sm text-slate-600">
-                          {option.value === "RCI Member"
-                            ? "Your account will be used for booking."
-                            : "Provide guest details to complete booking."}
-                        </p>
-                      </div>
-                      {selectedOption === option.value && (
-                        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#037092] text-white">
-                          ✓
-                        </span>
-                      )}
+        <section className="mt-6 rounded-2xl shadow-md p-4 bg-white">
+          <h2 className="text-lg font-semibold text-slate-900">Who&apos;s Checking In?</h2>
+          <div className="mt-4 grid grid-cols-2 gap-4">
+            {['RCI Member', 'A Guest'].map((option) => {
+              const isSelected = selectedOption === option;
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setSelectedOption(option)}
+                  className={`rounded-2xl border p-4 text-left transition-all duration-200 ${
+                    isSelected
+                      ? 'border-[#037092] bg-[#e6f8fc]'
+                      : 'border-slate-200 bg-white hover:border-[#037092]/50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-slate-900">{option}</p>
+                      <p className="mt-1 text-sm text-slate-600">
+                        {option === 'RCI Member'
+                          ? 'Use the member account for check-in.'
+                          : 'Enter separate guest details for this booking.'}
+                      </p>
                     </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {selectedOption === "A Guest" && (
-              <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                <GuestInfo onGuestInfoChange={setGuestInfo} />
-              </div>
-            )}
-          </div>
-
-          <aside className="space-y-6 rounded-3xl bg-white p-8 shadow-sm">
-            <div className="rounded-3xl border border-slate-200 bg-[#f8fbfc] p-6">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                Booking summary
-              </p>
-              <div className="mt-4 space-y-3">
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>Base price</span>
-                  <span>${checkoutDetails.price?.toFixed(2) || "0.00"}</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>Tax inclusive</span>
-                  <span>${taxInclusivePrice.toFixed(2)}</span>
-                </div>
-                {paymentMethod === "points" && (
-                  <div className="flex items-center justify-between text-slate-600">
-                    <span>Points total</span>
-                    <span>{checkoutDetails.points?.toLocaleString() || 0}</span>
+                    {isSelected && (
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#037092] text-sm font-bold text-white">
+                        OK
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-
-            <div className="rounded-3xl border border-slate-200 bg-white p-6">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                Total due
-              </p>
-              <p className="mt-3 text-3xl font-semibold text-slate-900">
-                {paymentMethod === "cash"
-                  ? `$${taxInclusivePrice.toFixed(2)}`
-                  : `${checkoutDetails.points?.toLocaleString() || 0} points`}
-              </p>
-            </div>
-
-            {formError && (
-              <div className="rounded-3xl bg-red-50 p-4 text-sm text-red-700">
-                {formError}
-              </div>
-            )}
-          </aside>
-        </div>
-
-        <div className="sticky bottom-0 z-20 mx-auto max-w-6xl rounded-t-3xl bg-slate-50 px-6 py-5 shadow-inner sm:px-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-slate-600">Ready for payment</p>
-              <p className="text-xl font-semibold text-slate-900">
-                {paymentMethod === "cash"
-                  ? `$${taxInclusivePrice.toFixed(2)}`
-                  : `${checkoutDetails.points?.toLocaleString() || 0} points`}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleContinue}
-              className="rounded-full bg-[#ffc445] px-8 py-4 text-base font-semibold text-slate-900 hover:bg-[#ffcd59]"
-            >
-              Continue to Payment
-            </button>
+                </button>
+              );
+            })}
           </div>
+        </section>
+
+        {selectedOption === 'A Guest' && (
+          <section className="mt-6 rounded-2xl shadow-md p-4 bg-white">
+            <GuestInfo onGuestInfoChange={setGuestInfo} />
+          </section>
+        )}
+
+        {errorMessage && (
+          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        )}
+      </div>
+
+      <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+          <div>
+            <p className="text-sm text-slate-500">Total amount</p>
+            <p className="text-xl font-bold text-slate-900">{totalLabel}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleContinue}
+            className="rounded-xl font-semibold py-3 px-6 transition-all duration-200 bg-[#ffc445] text-slate-900 hover:bg-[#ffd166]"
+          >
+            Continue
+          </button>
         </div>
       </div>
     </main>

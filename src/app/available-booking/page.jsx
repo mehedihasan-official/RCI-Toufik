@@ -1,69 +1,52 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
-const getPointsPerNight = (unitType) => {
-  switch (unitType) {
-    case "studio":
-    case "1 bedroom":
-      return 7000;
-    case "2 bedroom":
-      return 9000;
-    case "3 bedroom":
-      return 10500;
-    case "4 bedroom":
-      return 12500;
-    default:
-      return 0;
-  }
-};
+const getPointsPerNight = (unitType) =>
+  ({
+    studio: 7000,
+    '1 bedroom': 7000,
+    '2 bedroom': 9000,
+    '3 bedroom': 10500,
+    '4 bedroom': 12500,
+  })[unitType] || 0;
 
-const getFixedPrice = (unitType) => {
-  switch (unitType) {
-    case "studio":
-      return 309;
-    case "1 bedroom":
-      return 339;
-    case "2 bedroom":
-    case "3 bedroom":
-    case "4 bedroom":
-      return 379;
-    default:
-      return 0;
-  }
-};
+const getFixedPrice = (unitType) =>
+  ({
+    studio: 309,
+    '1 bedroom': 339,
+    '2 bedroom': 379,
+    '3 bedroom': 379,
+    '4 bedroom': 379,
+  })[unitType] || 0;
+
+const getTaxPrice = (base) => ({ 309: 329.08, 339: 361.02, 379: 403.63 })[base] || base;
+
+const formatDate = (value) =>
+  new Date(value).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
 export default function AvailableBookingPage() {
   const router = useRouter();
-  const [bookingDetails, setBookingDetails] = useState(null);
+  const [bookingData, setBookingData] = useState(null);
   const [timeLeft, setTimeLeft] = useState(8 * 60);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
-    const raw = localStorage.getItem("bookingDetails");
-    if (!raw) {
-      setBookingDetails(null);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(raw);
-      setBookingDetails({
-        ...parsed,
-        vacationType: parsed.vacationType || "rciPoints",
-        startDate: parsed.startDate ? new Date(parsed.startDate) : new Date(),
-        endDate: parsed.endDate ? new Date(parsed.endDate) : new Date(),
-      });
-    } catch {
-      setBookingDetails(null);
+    const data = localStorage.getItem('bookingDetails');
+    if (data) {
+      setBookingData(JSON.parse(data));
     }
   }, []);
 
   useEffect(() => {
     if (timeLeft <= 0) {
-      setIsModalOpen(true);
-      return;
+      setIsExpired(true);
+      return undefined;
     }
 
     const timer = setTimeout(() => {
@@ -73,28 +56,34 @@ export default function AvailableBookingPage() {
     return () => clearTimeout(timer);
   }, [timeLeft]);
 
-  const calculatePoints = () => {
-    if (!bookingDetails) {
-      return {
-        basePoints: 0,
-        weekendNights: 0,
-        weekendSurcharge: 0,
-        totalPoints: 0,
-      };
-    }
+  if (!bookingData) {
+    return (
+      <main className="min-h-screen bg-slate-50 px-4 py-10 md:px-6">
+        <div className="mx-auto max-w-2xl rounded-2xl shadow-md p-6 bg-white text-center">
+          <h1 className="text-2xl font-semibold text-slate-900">No booking selected</h1>
+          <p className="mt-3 text-sm text-slate-600">
+            Please go back and choose your resort dates again.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
-    const { startDate, endDate, unitType } = bookingDetails;
+  const { resort, startDate, endDate, unitType, vacationType, nights } = bookingData;
+
+  const calculatePoints = () => {
     const basePointsPerNight = getPointsPerNight(unitType);
     let basePoints = 0;
     let weekendNights = 0;
-    const currentDate = new Date(startDate);
-    const endDateObj = new Date(endDate);
+    const cur = new Date(startDate);
+    const end = new Date(endDate);
 
-    while (currentDate < endDateObj) {
-      const day = currentDate.getDay();
-      if (day === 0 || day === 6) weekendNights++;
+    while (cur < end) {
+      if (cur.getDay() === 0 || cur.getDay() === 6) {
+        weekendNights++;
+      }
       basePoints += basePointsPerNight;
-      currentDate.setDate(currentDate.getDate() + 1);
+      cur.setDate(cur.getDate() + 1);
     }
 
     const weekendSurcharge = weekendNights * 500;
@@ -106,156 +95,141 @@ export default function AvailableBookingPage() {
     };
   };
 
-  const points = useMemo(() => calculatePoints(), [bookingDetails]);
-
-  const handleBookNow = () => {
-    if (!bookingDetails) return;
-
-    localStorage.setItem(
-      "checkoutDetails",
-      JSON.stringify({
-        resort: bookingDetails.resort,
-        startDate: bookingDetails.startDate,
-        endDate: bookingDetails.endDate,
-        unitType: bookingDetails.unitType,
-        vacationType: bookingDetails.vacationType,
-        price:
-          bookingDetails.vacationType === "lastCall"
-            ? getFixedPrice(bookingDetails.unitType)
-            : 0,
-        points: points.totalPoints,
-        paymentMethod:
-          bookingDetails.vacationType === "lastCall" ? "cash" : "points",
-        totalPoints: points.totalPoints,
-        nights: bookingDetails.nights,
-        pointsPerNight: getPointsPerNight(bookingDetails.unitType),
-        weekendSurcharge: points.weekendSurcharge,
-      }),
-    );
-    router.push("/checkout");
-  };
-
-  if (!bookingDetails) {
-    return (
-      <div className="min-h-screen bg-slate-50 px-6 py-10">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-          <h2 className="text-2xl font-semibold text-slate-900">
-            No booking data available
-          </h2>
-          <p className="mt-3 text-slate-600">
-            Please return to the resort page and select dates again.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const price =
-    bookingDetails.vacationType === "lastCall"
-      ? getFixedPrice(bookingDetails.unitType)
-      : 0;
-  const paymentMethod =
-    bookingDetails.vacationType === "lastCall" ? "cash" : "points";
-
   const formatTime = (seconds) => {
     const minutes = Math.floor(seconds / 60);
-    const remaining = seconds % 60;
-    return `${minutes}:${remaining.toString().padStart(2, "0")}`;
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
   };
 
-  return (
-    <div className="min-h-screen bg-slate-50 px-6 py-10">
-      <div className="mx-auto max-w-4xl space-y-8">
-        <div className="rounded-3xl bg-white p-8 shadow-lg">
-          <h1 className="text-3xl font-semibold text-[#037092]">
-            {bookingDetails.vacationType === "rciPoints"
-              ? "Available Unit (with Points)"
-              : "Available Unit"}
-          </h1>
-          <p className="mt-2 text-slate-600">
-            {bookingDetails.resort?.place_name}
-          </p>
+  const isPoints = vacationType === 'rciPoints';
+  const { totalPoints, basePoints, weekendSurcharge, weekendNights } = calculatePoints();
+  const basePrice = getFixedPrice(unitType);
+  const taxPrice = getTaxPrice(basePrice);
 
-          <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-6">
-            <p className="text-xl font-semibold text-[#0370ad]">
-              {bookingDetails.unitType}
-            </p>
-            {paymentMethod === "cash" ? (
-              <div className="mt-6 space-y-4">
-                <p className="text-lg text-slate-700">
-                  {price.toFixed(2)} USD + tax
+  const handleBookNow = () => {
+    const { totalPoints: nextTotalPoints, basePoints: nextBasePoints, weekendSurcharge: nextWeekendSurcharge, weekendNights: nextWeekendNights } =
+      calculatePoints();
+    const nextBasePrice = getFixedPrice(unitType);
+    const nextTaxPrice = getTaxPrice(nextBasePrice);
+
+    localStorage.setItem(
+      'checkoutDetails',
+      JSON.stringify({
+        resort,
+        startDate,
+        endDate,
+        unitType,
+        vacationType,
+        paymentMethod: isPoints ? 'points' : 'cash',
+        points: isPoints ? nextTotalPoints : 0,
+        price: isPoints ? 0 : nextTaxPrice,
+        basePrice: isPoints ? 0 : nextBasePrice,
+        weekendSurcharge: isPoints ? nextWeekendSurcharge : 0,
+        weekendNights: isPoints ? nextWeekendNights : 0,
+        basePoints: isPoints ? nextBasePoints : 0,
+        nights,
+      }),
+    );
+    router.push('/checkout');
+  };
+
+  const titleColor = isPoints ? 'text-[#037092]' : 'text-[#f59e0b]';
+  const badgeClasses = isPoints
+    ? 'bg-[#e6f8fc] text-[#037092]'
+    : 'bg-[#fff2dc] text-[#b45309]';
+
+  return (
+    <main className="min-h-screen bg-slate-50 px-4 py-10 md:px-6">
+      <div className="mx-auto max-w-3xl">
+        <div className="text-center">
+          <h1 className={`text-3xl font-bold ${titleColor}`}>
+            {isPoints ? 'Club Points Booking' : 'Last Call Booking'}
+          </h1>
+        </div>
+
+        <section className="mt-6 rounded-2xl shadow-md p-4 bg-white md:p-6">
+          <h2 className="text-2xl font-semibold text-slate-900">{resort?.place_name}</h2>
+          <p className="mt-2 text-2xl font-semibold text-[#037092]">{unitType}</p>
+
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-semibold text-slate-900">Payment Section</h3>
+              <span className={`rounded-full px-4 py-2 text-sm font-semibold ${badgeClasses}`}>
+                {isPoints ? 'Points Payment' : 'Cash Payment'}
+              </span>
+            </div>
+
+            {isPoints ? (
+              <div className="mt-4 space-y-3 rounded-2xl bg-[#f8fcfd] p-4">
+                <p className="text-sm text-slate-600">{getPointsPerNight(unitType)} pts/night</p>
+                <p className="text-sm text-slate-700">
+                  Weekend nights: {weekendNights} x 500
                 </p>
-                <p className="text-3xl font-semibold text-slate-900">
-                  ${price.toFixed(2)}
+                <p className="text-sm text-slate-700">
+                  Base: {basePoints.toLocaleString()} + Weekend: {weekendSurcharge.toLocaleString()}
+                </p>
+                <p className="text-3xl font-bold text-[#037092]">
+                  TOTAL: {totalPoints.toLocaleString()} pts
                 </p>
               </div>
             ) : (
-              <div className="mt-6 space-y-4 text-slate-700">
-                <p className="text-lg">
-                  Points per night:{" "}
-                  {getPointsPerNight(bookingDetails.unitType).toLocaleString()}
-                </p>
-                {points.weekendNights > 0 && (
-                  <p>
-                    Weekend nights: {points.weekendNights} × 500 = +
-                    {points.weekendSurcharge.toLocaleString()} points
-                  </p>
-                )}
-                <p>Base points: {points.basePoints.toLocaleString()}</p>
-                <p className="text-3xl font-semibold text-slate-900">
-                  Total Points: {points.totalPoints.toLocaleString()}
+              <div className="mt-4 space-y-3 rounded-2xl bg-[#fffaf1] p-4">
+                <p className="text-sm text-slate-700">Base price: ${basePrice}</p>
+                <p className="text-sm text-slate-700">Tax included</p>
+                <p className="text-3xl font-bold text-[#f59e0b]">
+                  TOTAL: ${taxPrice.toFixed(2)}
                 </p>
               </div>
             )}
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <div className="rounded-3xl border border-slate-200 bg-white p-5">
-              <p className="text-sm font-semibold text-slate-500">Check-in</p>
-              <p className="mt-2 text-lg text-slate-900">
-                {new Date(bookingDetails.startDate).toLocaleDateString()}
-              </p>
+          <div className="mt-6 border-t border-slate-200 pt-6">
+            <h3 className="text-lg font-semibold text-slate-900">Dates Section</h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-slate-200 p-4">
+                <p className="text-sm text-slate-500">Check-in</p>
+                <p className="mt-1 font-semibold text-slate-900">{formatDate(startDate)}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 p-4">
+                <p className="text-sm text-slate-500">Check-out</p>
+                <p className="mt-1 font-semibold text-slate-900">{formatDate(endDate)}</p>
+              </div>
             </div>
-            <div className="rounded-3xl border border-slate-200 bg-white p-5">
-              <p className="text-sm font-semibold text-slate-500">Check-out</p>
-              <p className="mt-2 text-lg text-slate-900">
-                {new Date(bookingDetails.endDate).toLocaleDateString()}
-              </p>
-            </div>
+            <p className="mt-4 text-sm text-slate-700">Duration: {nights} nights</p>
           </div>
 
           <button
+            type="button"
             onClick={handleBookNow}
-            className="mt-8 w-full rounded-full bg-[#ffc445] px-6 py-4 text-base font-semibold text-slate-900 hover:bg-[#ffbd42]"
+            disabled={isExpired}
+            className="mt-8 w-full rounded-xl font-semibold py-3 px-6 transition-all duration-200 bg-[#ffc445] text-slate-900 hover:bg-[#ffd166] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {paymentMethod === "cash" ? "Book Now" : "Redeem Points"}
+            {isPoints ? 'Redeem Points' : 'Book Now'}
           </button>
 
-          <p className="mt-4 text-sm text-gray-500">
+          <p className="mt-4 text-center text-sm text-slate-500">
             Time remaining: {formatTime(timeLeft)}
           </p>
-        </div>
+        </section>
       </div>
 
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 py-10">
-          <div className="max-w-xl rounded-3xl bg-white p-8 text-center shadow-2xl">
-            <h2 className="text-2xl font-semibold text-slate-900">
-              Booking Timer Expired
-            </h2>
-            <p className="mt-4 text-slate-600">
-              The hold time on this reservation has expired. Please refresh and
-              select dates again.
+      {isExpired && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-xl">
+            <h2 className="text-2xl font-semibold text-slate-900">Session expired</h2>
+            <p className="mt-3 text-sm text-slate-600">
+              Your booking hold has expired. Please start the availability search again.
             </p>
             <button
-              onClick={() => setIsModalOpen(false)}
-              className="mt-6 rounded-full bg-[#037092] px-6 py-3 text-white hover:bg-[#035c73]"
+              type="button"
+              onClick={() => router.push('/single-available-unit')}
+              className="mt-6 rounded-xl font-semibold py-3 px-6 transition-all duration-200 bg-[#037092] text-white hover:bg-[#025a74]"
             >
-              Close
+              Choose Dates Again
             </button>
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

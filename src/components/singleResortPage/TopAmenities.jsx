@@ -29,19 +29,28 @@ export default function TopAmenities() {
   ];
 
   return (
-    <div className="carousel w-full space-x-5 overflow-x-auto pb-4">
+    <div className="mt-5 flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 sm:overflow-visible lg:grid-cols-3">
       {amenities.map((item) => (
         <div
           key={item.label}
-          className="carousel-item relative min-w-42.5 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm"
+          className="min-w-[15rem] rounded-[1.6rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fcfd_100%)] p-4 shadow-sm sm:min-w-0"
         >
-          <div className="flex items-center gap-3">
-            <img
-              src={item.src}
-              alt={item.label}
-              className="h-12 w-12 object-contain"
-            />
-            <span className="font-semibold text-slate-900">{item.label}</span>
+          <div className="flex items-start gap-3">
+            <div className="rounded-2xl bg-[#e6f8fc] p-3">
+              <img
+                src={item.src}
+                alt={item.label}
+                className="h-10 w-10 object-contain"
+              />
+            </div>
+            <div className="min-w-0">
+              <span className="block font-semibold text-slate-900">
+                {item.label}
+              </span>
+              <p className="mt-1 text-sm text-slate-500">
+                Popular among members booking this destination.
+              </p>
+            </div>
           </div>
         </div>
       ))}

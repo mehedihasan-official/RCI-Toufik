@@ -1,46 +1,46 @@
-"use client";
+'use client';
 
-import { AuthContext } from "@/providers/AuthProvider";
-import { useRouter } from "next/navigation";
-import { useContext, useEffect, useState } from "react";
+import { AuthContext } from '@/providers/AuthProvider';
+import { useRouter } from 'next/navigation';
+import { useContext, useEffect, useState } from 'react';
+
+const formatCardNumber = (value) => {
+  return value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+};
+
+const formatDate = (value) =>
+  new Date(value).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
 export default function PaymentPage() {
   const router = useRouter();
   const { user } = useContext(AuthContext);
 
-  const [paymentDetails, setPaymentDetails] = useState(null);
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiryDate, setExpiryDate] = useState("");
-  const [cvv, setCvv] = useState("");
+  const [paymentData, setPaymentData] = useState(null);
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [cvv, setCvv] = useState('');
   const [billingInfo, setBillingInfo] = useState({
-    fullName: "",
-    address1: "",
-    address2: "",
-    country: "",
-    city: "",
-    postalCode: "",
-    email: "",
-    phoneNumber: "",
+    firstName: '',
+    lastName: '',
+    address1: '',
+    address2: '',
+    country: '',
+    city: '',
+    state: '',
+    postalCode: '',
+    phoneNumber: '',
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = localStorage.getItem("paymentDetails");
-    if (!raw) return;
-
-    try {
-      const parsed = JSON.parse(raw);
-      setPaymentDetails(parsed);
-      if (!parsed.guestInfo) {
-        setBillingInfo((prev) => ({
-          ...prev,
-          email: parsed.resort?.email || prev.email,
-        }));
-      }
-    } catch (err) {
-      console.error("Unable to parse payment details", err);
+    const data = localStorage.getItem('paymentData');
+    if (data) {
+      setPaymentData(JSON.parse(data));
     }
   }, []);
 
@@ -49,287 +49,320 @@ export default function PaymentPage() {
     setBillingInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setError("");
-
-    if (!paymentDetails) {
-      setError("Payment details are missing.");
+  const handleExpiryChange = (value) => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    if (digits.length <= 2) {
+      setExpiryDate(digits);
       return;
     }
 
-    const { resort, paymentMethod, price, points, guestInfo, nights } =
-      paymentDetails;
+    setExpiryDate(`${digits.slice(0, 2)}/${digits.slice(2)}`);
+  };
 
-    if (paymentMethod === "cash") {
-      if (!cardNumber || !expiryDate || !cvv) {
-        setError("Please complete payment card details.");
+  const handleSubmit = async () => {
+    if (!paymentData) {
+      return;
+    }
+
+    const { resort, paymentMethod, price, points, guestInfo, startDate, endDate, unitType, nights } =
+      paymentData;
+
+    if (!user?.email) {
+      setErrorMessage('Please sign in before confirming your booking.');
+      return;
+    }
+
+    if (paymentMethod === 'cash' && (!cardNumber || !expiryDate || !cvv)) {
+      setErrorMessage('Please enter complete card details.');
+      return;
+    }
+
+    if (!guestInfo) {
+      const requiredBillingFields = [
+        'firstName',
+        'lastName',
+        'address1',
+        'country',
+        'city',
+        'state',
+        'postalCode',
+        'phoneNumber',
+      ];
+
+      const hasMissingField = requiredBillingFields.some((field) => !billingInfo[field]);
+      if (hasMissingField) {
+        setErrorMessage('Please complete the billing information before continuing.');
         return;
       }
     }
 
-    if (!user?.email) {
-      setError("Please sign in to complete your booking.");
-      return;
-    }
-
+    setErrorMessage('');
     setLoading(true);
 
     const bookingInfo = {
-      email: user.email,
-      resortId: resort?.resort_ID || resort?._id || resort?.id || "",
-      resortName: resort?.place_name || resort?.name || "",
-      checkIn: paymentDetails.startDate,
-      checkOut: paymentDetails.endDate,
-      totalPrice: paymentMethod === "cash" ? price : 0,
-      status: "confirmed",
-      bookingMeta: {
-        paymentMethod,
-        points: paymentMethod === "points" ? points : 0,
-        nights,
-        unitType: paymentDetails.unitType,
-      },
+      resort,
+      email: user?.email,
+      paymentMethod,
+      price: paymentMethod === 'cash' ? price : 0,
+      points: paymentMethod === 'points' ? points : 0,
+      startDate,
+      endDate,
+      unitType,
+      nights,
+      billingInfo: guestInfo ? { isGuest: true, ...guestInfo } : billingInfo,
+      paymentDetails: paymentMethod === 'cash' ? { cardNumber, expiryDate, cvv } : null,
+      resortId: resort?.resort_ID || resort?._id || resort?.id || '',
+      resortName: resort?.place_name || '',
+      checkIn: startDate,
+      checkOut: endDate,
+      totalPrice: paymentMethod === 'cash' ? price : 0,
+      status: 'confirmed',
+      bookingDate: new Date().toISOString(),
     };
 
     try {
-      const response = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bookingInfo),
       });
 
-      if (!response.ok) {
-        const message = await response.text();
-        throw new Error(message || "Failed to save booking.");
+      if (res.ok) {
+        localStorage.setItem(
+          'paymentData',
+          JSON.stringify({
+            ...paymentData,
+            billingInfo: guestInfo ? { isGuest: true, ...guestInfo } : billingInfo,
+            paymentDetails:
+              paymentMethod === 'cash'
+                ? {
+                    cardNumber,
+                    expiryDate,
+                    cvv,
+                    last4: cardNumber.replace(/\s/g, '').slice(-4),
+                  }
+                : null,
+          }),
+        );
+
+        localStorage.setItem(
+          'confirmationData',
+          JSON.stringify({
+            resort,
+            paymentMethod,
+            amount: paymentMethod === 'cash' ? price : points,
+            isPoints: paymentMethod === 'points',
+          }),
+        );
+        router.push('/payment-confirmation');
+        return;
       }
 
-      localStorage.setItem(
-        "confirmationDetails",
-        JSON.stringify({
-          resort,
-          paymentMethod,
-          amount: paymentMethod === "cash" ? price : points,
-          isPoints: paymentMethod === "points",
-          guestInfo: guestInfo || null,
-          billingInfo: guestInfo
-            ? { isGuest: true, ...guestInfo }
-            : billingInfo,
-        }),
-      );
-
-      router.push("/payment-confirmation");
-    } catch (err) {
-      console.error(err);
-      setError("Unable to complete payment. Please try again.");
+      setErrorMessage('Unable to confirm the booking right now. Please try again.');
+    } catch {
+      setErrorMessage('Unable to confirm the booking right now. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!paymentDetails) {
+  if (!paymentData) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-20">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-          <h2 className="text-2xl font-semibold text-slate-900">
-            Missing payment details
-          </h2>
-          <p className="mt-4 text-slate-600">
-            Please return to checkout to complete your booking.
+      <main className="min-h-screen bg-slate-50 px-4 py-10 md:px-6">
+        <div className="mx-auto max-w-2xl rounded-2xl shadow-md p-6 bg-white text-center">
+          <h1 className="text-2xl font-semibold text-slate-900">Payment details unavailable</h1>
+          <p className="mt-3 text-sm text-slate-600">
+            Please return to checkout and continue again.
           </p>
         </div>
       </main>
     );
   }
 
-  const { resort, paymentMethod, price, points, guestInfo, totalPoints } =
-    paymentDetails;
+  const { resort, startDate, endDate, unitType, paymentMethod, price, points, nights, guestInfo } =
+    paymentData;
+
+  const totalLabel =
+    paymentMethod === 'cash'
+      ? `$${Number(price || 0).toFixed(2)}`
+      : `${Number(points || 0).toLocaleString()} pts`;
+
+  const summaryFields = guestInfo
+    ? [
+        ['Guest', `${guestInfo.firstName} ${guestInfo.lastName}`.trim()],
+        ['Email', guestInfo.email || 'N/A'],
+        ['Phone', guestInfo.phoneNumber || 'N/A'],
+        ['Address', `${guestInfo.address1 || ''} ${guestInfo.address2 || ''}`.trim() || 'N/A'],
+      ]
+    : [];
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-10">
-      <div className="mx-auto max-w-6xl space-y-8">
-        <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="rounded-3xl bg-white p-8 shadow-sm">
+    <main className="min-h-screen bg-slate-50 pb-28">
+      <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-10">
+        <h1 className="text-3xl font-bold text-slate-900">
+          {paymentMethod === 'cash' ? 'Confirm Payment' : 'Confirm Points Redemption'}
+        </h1>
+
+        <section className="mt-6 rounded-2xl shadow-md p-4 bg-white">
+          {paymentMethod === 'cash' ? (
+            <>
+              <h2 className="text-lg font-semibold text-slate-900">Card Details</h2>
+              <div className="mt-4 rounded-2xl border border-slate-200 p-4">
+                <label className="block text-sm font-medium text-slate-700">
+                  Card Number
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={cardNumber}
+                    onChange={(event) => setCardNumber(formatCardNumber(event.target.value))}
+                    placeholder="XXXX XXXX XXXX XXXX"
+                    className="mt-2 rounded-lg border border-gray-300 p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#037092]"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <label className="text-sm font-medium text-slate-700">
+                  Expiry MM/YY
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={expiryDate}
+                    onChange={(event) => handleExpiryChange(event.target.value)}
+                    placeholder="MM/YY"
+                    className="mt-2 rounded-lg border border-gray-300 p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#037092]"
+                  />
+                </label>
+                <label className="text-sm font-medium text-slate-700">
+                  CVV
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    value={cvv}
+                    onChange={(event) => setCvv(event.target.value.replace(/\D/g, '').slice(0, 4))}
+                    placeholder="XXX"
+                    className="mt-2 rounded-lg border border-gray-300 p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#037092]"
+                  />
+                </label>
+              </div>
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                <span className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+                  Visa
+                </span>
+                <span className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
+                  Mastercard
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="rounded-2xl border border-[#037092]/20 bg-[#e6f8fc] p-5">
+              <h2 className="text-lg font-semibold text-[#037092]">Points confirmation box</h2>
+              <p className="mt-2 text-sm text-slate-700">
+                You are redeeming {Number(points || 0).toLocaleString()} RCI Points.
+              </p>
+              <p className="mt-1 text-sm text-slate-600">No card fields are required for this flow.</p>
+            </div>
+          )}
+        </section>
+
+        {!guestInfo ? (
+          <section className="mt-6 rounded-2xl shadow-md p-4 bg-white">
+            <h2 className="text-lg font-semibold text-slate-900">Billing Info</h2>
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              {[
+                ['firstName', 'First Name'],
+                ['lastName', 'Last Name'],
+                ['address1', 'Address 1'],
+                ['address2', 'Address 2'],
+                ['country', 'Country'],
+                ['city', 'City'],
+                ['state', 'State'],
+                ['postalCode', 'Postal Code'],
+                ['phoneNumber', 'Phone Number'],
+              ].map(([name, label]) => (
+                <label key={name} className="text-sm font-medium text-slate-700">
+                  {label}
+                  <input
+                    type="text"
+                    name={name}
+                    value={billingInfo[name]}
+                    onChange={handleBillingChange}
+                    className="mt-2 rounded-lg border border-gray-300 p-3 w-full focus:outline-none focus:ring-2 focus:ring-[#037092]"
+                  />
+                </label>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section className="mt-6 rounded-2xl shadow-md p-4 bg-white">
+            <h2 className="text-lg font-semibold text-slate-900">Billing Info</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Guest information from checkout will be used for billing and confirmation.
+            </p>
+            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+              {summaryFields.map(([label, value]) => (
+                <div key={label} className="rounded-2xl border border-slate-200 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
+                  <p className="mt-1 text-sm text-slate-700">{value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <section className="mt-6 rounded-2xl shadow-md p-4 bg-white">
+          <h2 className="text-lg font-semibold text-slate-900">Booking Summary Box</h2>
+          <div className="mt-4 space-y-3 text-sm text-slate-700">
             <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                  Payment details
-                </p>
-                <h1 className="mt-2 text-3xl font-semibold text-[#037092]">
-                  Payment
-                </h1>
-              </div>
-              <div className="rounded-3xl bg-[#e6f8fc] px-5 py-4 text-slate-700">
-                <p className="text-sm">Method</p>
-                <p className="mt-2 text-lg font-semibold text-[#037092]">
-                  {paymentMethod === "cash" ? "Cash" : "Points"}
-                </p>
-              </div>
+              <span>Resort</span>
+              <span className="text-right font-semibold text-slate-900">{resort?.place_name}</span>
             </div>
-
-            {paymentMethod === "cash" && (
-              <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                <div className="grid gap-4 md:grid-cols-3">
-                  <label className="space-y-2 text-sm text-slate-600">
-                    Card number
-                    <input
-                      name="cardNumber"
-                      value={cardNumber}
-                      onChange={(event) => setCardNumber(event.target.value)}
-                      className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#037092]"
-                      placeholder="1234 5678 9012 3456"
-                    />
-                  </label>
-                  <label className="space-y-2 text-sm text-slate-600">
-                    Expiry date
-                    <input
-                      name="expiryDate"
-                      value={expiryDate}
-                      onChange={(event) => setExpiryDate(event.target.value)}
-                      className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#037092]"
-                      placeholder="MM/YY"
-                    />
-                  </label>
-                  <label className="space-y-2 text-sm text-slate-600">
-                    CVV
-                    <input
-                      name="cvv"
-                      value={cvv}
-                      onChange={(event) => setCvv(event.target.value)}
-                      className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none focus:border-[#037092]"
-                      placeholder="123"
-                    />
-                  </label>
-                </div>
-              </form>
-            )}
-
-            {!guestInfo && paymentMethod === "cash" && (
-              <div className="mt-8 rounded-3xl border border-slate-200 bg-[#f8fbfc] p-6">
-                <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                  Billing information
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  {Object.entries(billingInfo).map(([key, value]) => (
-                    <div key={key} className="rounded-3xl bg-white p-4">
-                      <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                        {key}
-                      </p>
-                      <p className="mt-2 text-sm text-slate-700">
-                        {value || "—"}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {guestInfo && (
-              <div className="mt-8 rounded-3xl border border-slate-200 bg-[#f8fbfc] p-6">
-                <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                  Guest billing info
-                </p>
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                  <div className="rounded-3xl bg-white p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Name
-                    </p>
-                    <p className="mt-2 text-sm text-slate-700">
-                      {guestInfo.firstName} {guestInfo.lastName}
-                    </p>
-                  </div>
-                  <div className="rounded-3xl bg-white p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Email
-                    </p>
-                    <p className="mt-2 text-sm text-slate-700">
-                      {guestInfo.email}
-                    </p>
-                  </div>
-                  <div className="rounded-3xl bg-white p-4 sm:col-span-2">
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400">
-                      Address
-                    </p>
-                    <p className="mt-2 text-sm text-slate-700">
-                      {guestInfo.address1}
-                      {guestInfo.address2 ? `, ${guestInfo.address2}` : ""}
-                    </p>
-                    <p className="mt-2 text-sm text-slate-700">
-                      {guestInfo.city}, {guestInfo.country}{" "}
-                      {guestInfo.postalCode}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {error && (
-              <div className="mt-6 rounded-3xl bg-red-50 p-4 text-sm text-red-700">
-                {error}
-              </div>
-            )}
+            <div className="flex items-center justify-between gap-4">
+              <span>Unit</span>
+              <span className="text-right font-semibold text-slate-900">{unitType}</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span>Dates</span>
+              <span className="text-right font-semibold text-slate-900">
+                {formatDate(startDate)} - {formatDate(endDate)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span>Nights</span>
+              <span className="text-right font-semibold text-slate-900">{nights}</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span>Total</span>
+              <span className="text-right text-lg font-bold text-[#037092]">{totalLabel}</span>
+            </div>
           </div>
+        </section>
 
-          <aside className="space-y-6 rounded-3xl bg-white p-8 shadow-sm">
-            <div className="rounded-3xl border border-slate-200 bg-[#f8fbfc] p-6">
-              <p className="text-sm uppercase tracking-[0.2em] text-slate-500">
-                Booking summary
-              </p>
-              <div className="mt-4 space-y-3 text-slate-700">
-                <div className="flex items-center justify-between">
-                  <span>Resort</span>
-                  <span>{resort?.place_name}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Room</span>
-                  <span>{paymentDetails.unitType}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Check-in</span>
-                  <span>
-                    {new Date(paymentDetails.startDate).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span>Check-out</span>
-                  <span>
-                    {new Date(paymentDetails.endDate).toLocaleDateString()}
-                  </span>
-                </div>
-                {paymentMethod === "points" ? (
-                  <div className="flex items-center justify-between font-semibold text-slate-900">
-                    <span>Total points</span>
-                    <span>{points?.toLocaleString()}</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between font-semibold text-slate-900">
-                    <span>Total</span>
-                    <span>${price?.toFixed(2)}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </aside>
-        </div>
-
-        <div className="sticky bottom-0 z-20 mx-auto max-w-6xl rounded-t-3xl bg-slate-50 px-6 py-5 shadow-inner sm:px-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-slate-600">Complete your payment</p>
-              <p className="text-xl font-semibold text-slate-900">
-                {paymentMethod === "cash"
-                  ? `$${price?.toFixed(2)}`
-                  : `${points?.toLocaleString()} points`}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={loading}
-              className="rounded-full bg-[#ffc445] px-8 py-4 text-base font-semibold text-slate-900 hover:bg-[#ffcd59] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {loading ? "Processing…" : "Submit Payment"}
-            </button>
+        {errorMessage && (
+          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage}
           </div>
+        )}
+      </div>
+
+      <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+          <div>
+            <p className="text-sm text-slate-500">Total</p>
+            <p className="text-xl font-bold text-slate-900">{totalLabel}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex items-center justify-center gap-2 rounded-xl font-semibold py-3 px-6 transition-all duration-200 bg-[#ffc445] text-slate-900 hover:bg-[#ffd166] disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {loading && (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-900 border-t-transparent" />
+            )}
+            {paymentMethod === 'cash' ? 'Confirm Payment' : 'Confirm Points Redemption'}
+          </button>
         </div>
       </div>
     </main>
