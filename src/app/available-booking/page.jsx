@@ -1,33 +1,62 @@
 "use client";
 
-import { addDays } from "date-fns";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const getPointsPerNight = (unitType) => {
+  switch (unitType) {
+    case "studio":
+    case "1 bedroom":
+      return 7000;
+    case "2 bedroom":
+      return 9000;
+    case "3 bedroom":
+      return 10500;
+    case "4 bedroom":
+      return 12500;
+    default:
+      return 0;
+  }
+};
+
+const getFixedPrice = (unitType) => {
+  switch (unitType) {
+    case "studio":
+      return 309;
+    case "1 bedroom":
+      return 339;
+    case "2 bedroom":
+    case "3 bedroom":
+    case "4 bedroom":
+      return 379;
+    default:
+      return 0;
+  }
+};
 
 export default function AvailableBookingPage() {
   const router = useRouter();
-  const [bookingState, setBookingState] = useState(null);
+  const [bookingDetails, setBookingDetails] = useState(null);
   const [timeLeft, setTimeLeft] = useState(8 * 60);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const raw = localStorage.getItem("bookingState");
+    const raw = localStorage.getItem("bookingDetails");
     if (!raw) {
-      setBookingState(null);
+      setBookingDetails(null);
       return;
     }
 
     try {
       const parsed = JSON.parse(raw);
-      setBookingState({
+      setBookingDetails({
         ...parsed,
+        vacationType: parsed.vacationType || "rciPoints",
         startDate: parsed.startDate ? new Date(parsed.startDate) : new Date(),
-        endDate: parsed.endDate
-          ? new Date(parsed.endDate)
-          : addDays(new Date(), 6),
+        endDate: parsed.endDate ? new Date(parsed.endDate) : new Date(),
       });
     } catch {
-      setBookingState(null);
+      setBookingDetails(null);
     }
   }, []);
 
@@ -44,81 +73,69 @@ export default function AvailableBookingPage() {
     return () => clearTimeout(timer);
   }, [timeLeft]);
 
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remaining = seconds % 60;
-    return `${minutes}:${remaining.toString().padStart(2, "0")}`;
-  };
-
-  const getPointsPerNight = (unitType) => {
-    switch (unitType) {
-      case "studio":
-      case "1 bedroom":
-        return 7000;
-      case "2 bedroom":
-        return 9000;
-      case "3 bedroom":
-        return 10500;
-      case "4 bedroom":
-        return 12500;
-      default:
-        return 0;
-    }
-  };
-
-  const getFixedPrice = (unitType) => {
-    switch (unitType) {
-      case "studio":
-        return 309;
-      case "1 bedroom":
-        return 339;
-      case "2 bedroom":
-      case "3 bedroom":
-      case "4 bedroom":
-        return 379;
-      default:
-        return 0;
-    }
-  };
-
   const calculatePoints = () => {
-    if (!bookingState)
+    if (!bookingDetails) {
       return {
         basePoints: 0,
         weekendNights: 0,
         weekendSurcharge: 0,
         totalPoints: 0,
       };
-    const { startDate, endDate, unitType } = bookingState;
-    const pointsPerNight = getPointsPerNight(unitType);
-    let weekendNights = 0;
-    let current = new Date(startDate);
-
-    while (current < endDate) {
-      const day = current.getDay();
-      if (day === 0 || day === 6) {
-        weekendNights += 1;
-      }
-      current.setDate(current.getDate() + 1);
     }
 
-    const nights =
-      bookingState.nights ||
-      Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-    const basePoints = nights * pointsPerNight;
-    const weekendSurcharge = weekendNights * 500;
-    const totalPoints = basePoints + weekendSurcharge;
+    const { startDate, endDate, unitType } = bookingDetails;
+    const basePointsPerNight = getPointsPerNight(unitType);
+    let basePoints = 0;
+    let weekendNights = 0;
+    const currentDate = new Date(startDate);
+    const endDateObj = new Date(endDate);
 
-    return { basePoints, weekendNights, weekendSurcharge, totalPoints };
+    while (currentDate < endDateObj) {
+      const day = currentDate.getDay();
+      if (day === 0 || day === 6) weekendNights++;
+      basePoints += basePointsPerNight;
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const weekendSurcharge = weekendNights * 500;
+    return {
+      basePoints,
+      weekendNights,
+      weekendSurcharge,
+      totalPoints: basePoints + weekendSurcharge,
+    };
   };
 
+  const points = useMemo(() => calculatePoints(), [bookingDetails]);
+
   const handleBookNow = () => {
-    if (!bookingState) return;
-    localStorage.setItem("checkoutState", JSON.stringify(bookingState));
+    if (!bookingDetails) return;
+
+    localStorage.setItem(
+      "checkoutDetails",
+      JSON.stringify({
+        resort: bookingDetails.resort,
+        startDate: bookingDetails.startDate,
+        endDate: bookingDetails.endDate,
+        unitType: bookingDetails.unitType,
+        vacationType: bookingDetails.vacationType,
+        price:
+          bookingDetails.vacationType === "lastCall"
+            ? getFixedPrice(bookingDetails.unitType)
+            : 0,
+        points: points.totalPoints,
+        paymentMethod:
+          bookingDetails.vacationType === "lastCall" ? "cash" : "points",
+        totalPoints: points.totalPoints,
+        nights: bookingDetails.nights,
+        pointsPerNight: getPointsPerNight(bookingDetails.unitType),
+        weekendSurcharge: points.weekendSurcharge,
+      }),
+    );
     router.push("/checkout");
   };
 
-  if (!bookingState) {
+  if (!bookingDetails) {
     return (
       <div className="min-h-screen bg-slate-50 px-6 py-10">
         <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
@@ -133,30 +150,35 @@ export default function AvailableBookingPage() {
     );
   }
 
-  const points = calculatePoints();
   const price =
-    bookingState.vacationType === "lastCall"
-      ? getFixedPrice(bookingState.unitType)
+    bookingDetails.vacationType === "lastCall"
+      ? getFixedPrice(bookingDetails.unitType)
       : 0;
   const paymentMethod =
-    bookingState.vacationType === "lastCall" ? "cash" : "points";
+    bookingDetails.vacationType === "lastCall" ? "cash" : "points";
+
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remaining = seconds % 60;
+    return `${minutes}:${remaining.toString().padStart(2, "0")}`;
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 px-6 py-10">
       <div className="mx-auto max-w-4xl space-y-8">
         <div className="rounded-3xl bg-white p-8 shadow-lg">
           <h1 className="text-3xl font-semibold text-[#037092]">
-            {bookingState.vacationType === "rciPoints"
+            {bookingDetails.vacationType === "rciPoints"
               ? "Available Unit (with Points)"
               : "Available Unit"}
           </h1>
           <p className="mt-2 text-slate-600">
-            {bookingState.resort?.place_name}
+            {bookingDetails.resort?.place_name}
           </p>
 
           <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-6">
             <p className="text-xl font-semibold text-[#0370ad]">
-              {bookingState.unitType}
+              {bookingDetails.unitType}
             </p>
             {paymentMethod === "cash" ? (
               <div className="mt-6 space-y-4">
@@ -171,7 +193,7 @@ export default function AvailableBookingPage() {
               <div className="mt-6 space-y-4 text-slate-700">
                 <p className="text-lg">
                   Points per night:{" "}
-                  {getPointsPerNight(bookingState.unitType).toLocaleString()}
+                  {getPointsPerNight(bookingDetails.unitType).toLocaleString()}
                 </p>
                 {points.weekendNights > 0 && (
                   <p>
@@ -191,13 +213,13 @@ export default function AvailableBookingPage() {
             <div className="rounded-3xl border border-slate-200 bg-white p-5">
               <p className="text-sm font-semibold text-slate-500">Check-in</p>
               <p className="mt-2 text-lg text-slate-900">
-                {bookingState.startDate.toLocaleDateString()}
+                {new Date(bookingDetails.startDate).toLocaleDateString()}
               </p>
             </div>
             <div className="rounded-3xl border border-slate-200 bg-white p-5">
               <p className="text-sm font-semibold text-slate-500">Check-out</p>
               <p className="mt-2 text-lg text-slate-900">
-                {bookingState.endDate.toLocaleDateString()}
+                {new Date(bookingDetails.endDate).toLocaleDateString()}
               </p>
             </div>
           </div>
