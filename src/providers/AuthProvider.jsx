@@ -2,12 +2,12 @@
 
 import { auth } from "@/lib/firebase";
 import {
-  GoogleAuthProvider,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signInWithPopup,
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword,
+    signOut as firebaseSignOut,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signInWithPopup,
 } from "firebase/auth";
 import { createContext, useEffect, useState } from "react";
 
@@ -19,6 +19,7 @@ export default function AuthProvider({ children }) {
   const [role, setRole] = useState("user");
   const [resortData, setResortData] = useState([]);
   const [allResortData, setAllResortData] = useState([]);
+  const [allResortsLoading, setAllResortsLoading] = useState(true);
   const [allBookingsData, setAllBookingsData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
@@ -248,6 +249,7 @@ export default function AuthProvider({ children }) {
   };
 
   const fetchAllResorts = async () => {
+    setAllResortsLoading(true);
     try {
       const response = await fetch("/api/all-resorts");
       if (response.ok) {
@@ -256,6 +258,8 @@ export default function AuthProvider({ children }) {
       }
     } catch (error) {
       console.error("Fetch all resorts error:", error);
+    } finally {
+      setAllResortsLoading(false);
     }
   };
 
@@ -378,6 +382,7 @@ export default function AuthProvider({ children }) {
     role,
     resortData,
     allResortData,
+    allResortsLoading,
     allBookingsData,
     totalPages,
     currentPage,

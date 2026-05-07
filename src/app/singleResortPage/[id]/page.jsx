@@ -1,5 +1,6 @@
 "use client";
 
+import TopAmenities from "@/components/singleResortPage/TopAmenities";
 import { AuthContext } from "@/providers/AuthProvider";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -314,7 +315,7 @@ export default function SingleResortPage() {
             Top Amenities
           </h2>
           <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
-            <TopAmeni
+            <TopAmenities />
           </div>
         </section>
 

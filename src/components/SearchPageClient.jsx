@@ -1,13 +1,14 @@
 "use client";
 
+import Loading from "@/components/Loading";
 import ResortCard from "@/components/ResortCard";
 import { AuthContext } from "@/providers/AuthProvider";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useContext, useMemo } from "react";
+import { useContext, useMemo } from "react"; 
 
 export default function SearchPageClient() {
-  const { allResortData = [] } = useContext(AuthContext);
+  const { allResortData = [], allResortsLoading } = useContext(AuthContext);
   const searchParams = useSearchParams();
   const searchTerm = searchParams.get("q")?.trim() || "";
 
@@ -85,6 +86,10 @@ export default function SearchPageClient() {
     return modified;
   };
 
+  if (allResortsLoading) {
+    return <Loading />;
+  }
+
   return (
     <section className="px-6 py-10">
       <div className="mx-auto max-w-6xl">
@@ -120,7 +125,7 @@ export default function SearchPageClient() {
         ) : searchTerm ? (
           <div className="mt-10 rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
             <p className="text-xl font-semibold text-slate-900">
-              No Results Found for &apos;{searchTerm}&apos;
+              There are no matching data for &apos;{searchTerm}&apos;
             </p>
           </div>
         ) : (

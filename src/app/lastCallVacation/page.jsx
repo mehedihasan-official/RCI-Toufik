@@ -106,8 +106,8 @@ export default function LastCallVacationPage() {
 
         {/* Resort Grid */}
         <div className="mb-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {(filteredData.length > 0 ? filteredData : resortData).map(
-            (resort) => (
+          {filteredData.length > 0 ? (
+            filteredData.map((resort) => (
               <Link
                 key={resort._id}
                 href={`/singleResortPage/${resort._id}`}
@@ -115,7 +115,23 @@ export default function LastCallVacationPage() {
               >
                 <ResortCard resort={resort} />
               </Link>
-            ),
+            ))
+          ) : searchTerm ? (
+            <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+              <p className="text-xl font-semibold text-slate-900">
+                There are no matching data for &apos;{searchTerm}&apos;
+              </p>
+            </div>
+          ) : (
+            resortData.map((resort) => (
+              <Link
+                key={resort._id}
+                href={`/singleResortPage/${resort._id}`}
+                className="transition hover:shadow-lg"
+              >
+                <ResortCard resort={resort} />
+              </Link>
+            ))
           )}
         </div>
 
