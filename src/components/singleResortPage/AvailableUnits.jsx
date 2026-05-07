@@ -15,7 +15,7 @@ export default function AvailableUnits({ currentResort }) {
   };
 
   return (
-    <div className="space-y-6 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="space-y-6 rounded-[2rem] border border-slate-200 bg-white p-5 sm:p-6">
       <div className="rounded-[1.75rem] bg-[#f4fbfd] p-5">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#037092]">
           Availability
@@ -33,7 +33,7 @@ export default function AvailableUnits({ currentResort }) {
         <Link
           href="/single-available-unit"
           onClick={() => handleTransmission("rciPoints")}
-          className="group block overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fcfd_100%)] p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-[#037092] hover:shadow-lg"
+          className="group block overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fcfd_100%)] p-6 transition hover:-translate-y-0.5 hover:border-[#037092]"
         >
           <span className="inline-flex rounded-full bg-[#037092] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white">
             Member Favorite
@@ -57,7 +57,7 @@ export default function AvailableUnits({ currentResort }) {
         <Link
           href="/single-available-unit"
           onClick={() => handleTransmission("lastCall")}
-          className="group block overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fffaf2_100%)] p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-[#037092] hover:shadow-lg"
+          className="group block overflow-hidden rounded-[2rem] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#fffaf2_100%)] p-6 transition hover:-translate-y-0.5 hover:border-[#037092]"
         >
           <span className="inline-flex rounded-full bg-[#f4bc43] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#072a34]">
             Last Minute

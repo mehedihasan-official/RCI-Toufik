@@ -26,7 +26,7 @@ export default function RoomDetails({ room_details = {} }) {
   return (
     <div className="space-y-10 px-4 py-6">
       {isNotEmpty(sleeps_room) && (
-        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <section className="rounded-3xl border border-slate-200 bg-white">
           <div className="px-5 py-6 text-center">
             <h2 className="text-2xl font-semibold">Bedroom</h2>
             <div className="divider divider-info my-4" />
@@ -60,7 +60,7 @@ export default function RoomDetails({ room_details = {} }) {
       )}
 
       {isNotEmpty(studio_sleeps_room) && (
-        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <section className="rounded-3xl border border-slate-200 bg-white">
           <div className="px-5 py-6 text-center">
             <h2 className="text-2xl font-semibold">Studio</h2>
             <div className="divider divider-info my-4" />
@@ -94,7 +94,7 @@ export default function RoomDetails({ room_details = {} }) {
       )}
 
       {isNotEmpty(hotel_room) && (
-        <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <section className="rounded-3xl border border-slate-200 bg-white">
           <div className="px-5 py-6 text-center">
             <h2 className="text-2xl font-semibold">Hotel</h2>
             <div className="divider divider-info my-4" />

@@ -6,6 +6,9 @@ import "./globals.css";
 export const metadata = {
   title: "RCI Vacations",
   description: "Worlds largest vacation exchange platform for resort bookings",
+  icons: {
+    icon: "/Rci-vertical.png",
+  },
 };
 
 export default function RootLayout({ children }) {

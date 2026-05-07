@@ -9,7 +9,7 @@ export default function Reviews({ reviews_amount, rating }) {
   ];
 
   return (
-    <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-[2rem] border border-slate-200 bg-white p-5 sm:p-6">
       <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#037092]">
         Review Summary
       </p>

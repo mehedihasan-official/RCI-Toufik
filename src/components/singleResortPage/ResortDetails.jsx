@@ -6,7 +6,7 @@ export default function ResortDetails({
   check_out_time,
 }) {
   return (
-    <div className="space-y-6 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="space-y-6 rounded-[2rem] border border-slate-200 bg-white p-5 sm:p-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#037092]">
           Overview
