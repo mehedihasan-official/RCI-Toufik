@@ -1,6 +1,7 @@
 'use client';
 
 import GuestInfo from '@/components/GuestInfo';
+import SafeImage from '@/components/SafeImage';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -137,14 +138,13 @@ export default function CheckoutPage() {
         <h1 className="text-3xl font-bold text-slate-900">Checkout</h1>
 
         <section className="mt-6 rounded-2xl shadow-md p-4 bg-white">
-          <div className="overflow-hidden rounded-2xl bg-slate-100">
-            {resortImage ? (
-              <img src={resortImage} alt={resort?.place_name} className="h-48 w-full object-cover" />
-            ) : (
-              <div className="flex h-48 items-center justify-center bg-[#e6f8fc] text-[#037092]">
-                Resort image unavailable
-              </div>
-            )}
+          <div className="overflow-hidden rounded-2xl bg-slate-100 h-48">
+            <SafeImage
+              src={resortImage}
+              alt={resort?.place_name || "Resort"}
+              seed={resort?._id || resort?.resort_ID || resort?.place_name}
+              className="h-full w-full object-cover"
+            />
           </div>
           <div className="mt-4">
             <p className="text-sm text-slate-500">{resort?.location}</p>

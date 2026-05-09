@@ -1,5 +1,6 @@
 "use client";
 
+import SafeImage from "@/components/SafeImage";
 import TopAmenities from "@/components/singleResortPage/TopAmenities";
 import { AuthContext } from "@/providers/AuthProvider";
 import Link from "next/link";
@@ -242,17 +243,12 @@ export default function SingleResortPage() {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
           >
-            {activeImage ? (
-              <img
-                src={activeImage}
-                alt={currentResort.place_name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center bg-[#e6f8fc] text-[#037092]">
-                Resort image unavailable
-              </div>
-            )}
+            <SafeImage
+              src={activeImage}
+              alt={currentResort.place_name}
+              seed={currentResort._id || currentResort.resort_ID || currentResort.place_name}
+              className="h-full w-full object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
           </div>
 
