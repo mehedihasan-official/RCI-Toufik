@@ -69,7 +69,7 @@ function AdminNavLink({
       className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
         isActive
           ? "bg-[#037092] text-white shadow-sm"
-          : "text-slate-200 hover:bg-gray-800 hover:text-white"
+          : "text-slate-700 hover:bg-gray-100 hover:text-[#037092] dark:text-slate-200 dark:hover:bg-gray-800 dark:hover:text-white"
       } ${mobile ? "w-full" : ""}`}
     >
       <Icon className="text-lg" />
@@ -103,7 +103,7 @@ export default function AdminPanelLayout({ children }) {
 
   if (loading || !user || role !== "admin") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-700 border-t-[#037092]" />
       </div>
     );
@@ -114,16 +114,21 @@ export default function AdminPanelLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="fixed top-0 z-50 w-full border-b border-gray-800 bg-gray-900/95 backdrop-blur lg:hidden">
+      <div className="fixed top-0 z-50 w-full border-b border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-900/95 lg:hidden">
         <div className="flex items-center justify-between p-4">
-          <Link href="/" className="text-lg font-bold tracking-tight text-white">
+          <Link
+            href="/"
+            className="text-lg font-bold tracking-tight text-gray-900 dark:text-white"
+          >
             RCI Admin
           </Link>
-          <div className="text-base font-semibold text-white">Admin Panel</div>
+          <div className="text-base font-semibold text-gray-900 dark:text-white">
+            Admin Panel
+          </div>
           <button
             type="button"
             onClick={() => setIsMenuOpen((current) => !current)}
-            className="rounded-xl border border-gray-700 p-2 text-slate-200 transition hover:border-[#037092] hover:text-white"
+            className="rounded-xl border border-gray-300 p-2 text-slate-700 transition hover:border-[#037092] hover:text-[#037092] dark:border-gray-700 dark:text-slate-200 dark:hover:text-white"
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           >
             {isMenuOpen ? (
@@ -135,8 +140,8 @@ export default function AdminPanelLayout({ children }) {
         </div>
 
         {isMenuOpen && (
-          <div className="absolute top-full left-0 right-0 border-t border-gray-800 bg-gray-900 px-4 pb-4 shadow-2xl">
-            <div className="mb-4 mt-4 flex items-center gap-3 rounded-2xl bg-gray-800 p-3">
+          <div className="absolute top-full left-0 right-0 border-t border-gray-200 bg-white px-4 pb-4 shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+            <div className="mb-4 mt-4 flex items-center gap-3 rounded-2xl bg-gray-100 p-3 dark:bg-gray-800">
               {user.photoURL ? (
                 <img
                   src={user.photoURL}
@@ -152,7 +157,9 @@ export default function AdminPanelLayout({ children }) {
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
                   Admin access
                 </p>
-                <p className="text-sm font-semibold text-white">{displayName}</p>
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {displayName}
+                </p>
                 <p className="text-xs text-slate-400">{user.email}</p>
               </div>
             </div>
@@ -171,7 +178,7 @@ export default function AdminPanelLayout({ children }) {
               ))}
             </div>
 
-            <div className="my-4 h-px bg-gray-800" />
+            <div className="my-4 h-px bg-gray-200 dark:bg-gray-800" />
 
             <div className="space-y-2">
               {secondaryLinks.map(({ href, label, icon: Icon }) => (
@@ -199,23 +206,23 @@ export default function AdminPanelLayout({ children }) {
         )}
       </div>
 
-      <div className="hidden lg:fixed lg:left-0 lg:top-0 lg:flex lg:h-screen lg:w-64 lg:flex-shrink-0 lg:flex-col lg:bg-gray-900 lg:text-white lg:shadow-[0_24px_60px_rgba(2,6,23,0.45)]">
-        <div className="border-b border-gray-800 px-6 py-8">
+      <div className="hidden lg:fixed lg:left-0 lg:top-0 lg:flex lg:h-screen lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-white lg:text-slate-900 lg:shadow-[0_24px_60px_rgba(2,6,23,0.12)] dark:lg:border-gray-800 dark:lg:bg-gray-900 dark:lg:text-white dark:lg:shadow-[0_24px_60px_rgba(2,6,23,0.45)]">
+        <div className="border-b border-gray-200 px-6 py-8 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#037092]/20 text-[#7dd3fc]">
               <HiMiniSparkles className="text-2xl" />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500 dark:text-slate-400">
                 RCI Admin
               </p>
-              <h1 className="bg-gradient-to-r from-[#7dd3fc] via-white to-[#bae6fd] bg-clip-text text-xl font-bold text-transparent">
+              <h1 className="text-xl font-bold text-[#037092] dark:text-[#7dd3fc]">
                 Admin Panel
               </h1>
             </div>
           </div>
 
-          <div className="mt-8 flex items-center gap-4 rounded-2xl bg-gray-800 p-4">
+          <div className="mt-8 flex items-center gap-4 rounded-2xl bg-gray-100 p-4 dark:bg-gray-800">
             {user.photoURL ? (
               <img
                 src={user.photoURL}
@@ -235,7 +242,7 @@ export default function AdminPanelLayout({ children }) {
                   Admin Badge
                 </span>
               </div>
-              <p className="truncate text-base font-semibold text-white">
+              <p className="truncate text-base font-semibold text-gray-900 dark:text-white">
                 {displayName}
               </p>
               <p className="truncate text-sm text-slate-400">{user.email}</p>
@@ -257,7 +264,7 @@ export default function AdminPanelLayout({ children }) {
               ))}
             </div>
 
-            <div className="h-px bg-gray-800" />
+            <div className="h-px bg-gray-200 dark:bg-gray-800" />
 
             <div className="space-y-2">
               {secondaryLinks.map(({ href, label, icon: Icon }) => (
@@ -275,7 +282,7 @@ export default function AdminPanelLayout({ children }) {
           <button
             type="button"
             onClick={handleSignOut}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-700 px-4 py-3 text-sm font-semibold text-slate-200 transition hover:border-[#037092] hover:bg-gray-800 hover:text-white"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#037092] hover:bg-gray-100 hover:text-[#037092] dark:border-gray-700 dark:text-slate-200 dark:hover:bg-gray-800 dark:hover:text-white"
           >
             <RiLogoutBoxRLine className="text-lg" />
             Sign Out

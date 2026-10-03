@@ -13,8 +13,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="bg-white text-gray-900 dark:bg-gray-900 dark:text-white antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased bg-background text-foreground">
         <AuthProvider>
           <Header />
           <main className="min-h-screen">{children}</main>

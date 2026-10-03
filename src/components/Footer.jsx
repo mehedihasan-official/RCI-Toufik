@@ -13,13 +13,15 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#edebef] px-6 py-12 text-gray-700">
+    <footer className="bg-[#edebef] px-6 py-12 text-gray-700 dark:bg-[#17252c] dark:text-gray-200">
       <div className="mx-auto max-w-7xl">
         {/* Footer Content Grid */}
         <div className="mb-8 grid gap-8 md:grid-cols-4">
           {/* Column 1 */}
           <div>
-            <h3 className="mb-4 font-bold text-gray-900">Explore RCI</h3>
+            <h3 className="mb-4 font-bold text-gray-900 dark:text-white">
+              Explore RCI
+            </h3>
             <nav className="flex flex-col gap-2">
               <Link href="/about" className="text-sm hover:text-[#037092]">
                 About RCI
@@ -35,7 +37,9 @@ export default function Footer() {
 
           {/* Column 2 */}
           <div>
-            <h3 className="mb-4 font-bold text-gray-900">Support</h3>
+            <h3 className="mb-4 font-bold text-gray-900 dark:text-white">
+              Support
+            </h3>
             <nav className="flex flex-col gap-2">
               <Link href="/help" className="text-sm hover:text-[#037092]">
                 Help Center
@@ -51,7 +55,9 @@ export default function Footer() {
 
           {/* Column 3 */}
           <div>
-            <h3 className="mb-4 font-bold text-gray-900">Legal</h3>
+            <h3 className="mb-4 font-bold text-gray-900 dark:text-white">
+              Legal
+            </h3>
             <nav className="flex flex-col gap-2">
               <Link href="/privacy" className="text-sm hover:text-[#037092]">
                 Privacy Policy
@@ -67,7 +73,9 @@ export default function Footer() {
 
           {/* Column 4 - Social */}
           <div>
-            <h3 className="mb-4 font-bold text-gray-900">Follow Us</h3>
+            <h3 className="mb-4 font-bold text-gray-900 dark:text-white">
+              Follow Us
+            </h3>
             <div className="flex gap-4">
               <a
                 href="https://facebook.com"
